@@ -1,0 +1,384 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+@plugin "@toolwind/corner-shape";
+@plugin "tailwind-scrollbar-hide";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * ─── Peerly design system ────────────────────────────────────────────────────
+ * Soft, playful "quiz app" look: airy periwinkle-blue canvas, chunky rounded
+ * cards, sunshine-yellow highlights, candy pink / mint accents and a deep-ink
+ * call-to-action. Headings use a rounded geometric display face (Poppins,
+ * wired to the `font-serif` utility), body copy uses Plus Jakarta Sans.
+ *
+ * Brand accents are exposed as Tailwind colours:
+ *   bg-sky / bg-sky-soft      periwinkle blue (hero cards, active nav)
+ *   bg-sun / bg-sun-soft      yellow (chips, highlights, gems)
+ *   bg-candy / bg-candy-soft  pink (feature cards)
+ *   bg-mint / bg-mint-soft    green (success, podium #1)
+ *   bg-ink                    near-black CTA pills
+ */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  /* Peerly brand accents */
+  --color-sky: var(--sky);
+  --color-sky-soft: var(--sky-soft);
+  --color-sun: var(--sun);
+  --color-sun-soft: var(--sun-soft);
+  --color-candy: var(--candy);
+  --color-candy-soft: var(--candy-soft);
+  --color-mint: var(--mint);
+  --color-mint-soft: var(--mint-soft);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 12px);
+  --radius-3xl: calc(var(--radius) + 18px);
+  --radius: 1rem;
+
+  --shadow-2xl: var(--shadow-2xl);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-md: var(--shadow-md);
+  --shadow: var(--shadow);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-2xs: var(--shadow-2xs);
+  --color-shadow-color: var(--shadow-color);
+
+  --animate-shiny-text: shiny-text 8s infinite;
+  @keyframes shiny-text {
+    0%,
+    90%,
+    100% {
+      background-position: calc(-100% - var(--shiny-width)) 0;
+    }
+    30%,
+    60% {
+      background-position: calc(100% + var(--shiny-width)) 0;
+    }
+  }
+  --animate-meteor: meteor 5s linear infinite;
+  @keyframes meteor {
+    0% {
+      transform: rotate(var(--angle)) translateX(0);
+      opacity: 1;
+    }
+    70% {
+      opacity: 1;
+    }
+    100% {
+      transform: rotate(var(--angle)) translateX(-500px);
+      opacity: 0;
+    }
+  }
+  --animate-float: float 5s ease-in-out infinite;
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-3deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(3deg);
+    }
+  }
+  --animate-spotlight: spotlight 2s ease 0.75s 1 forwards;
+}
+
+/* Keeps admin quiz controls on the site palette even inside event-themed areas. */
+.site-theme {
+  --primary: oklch(0.6 0.17 262);
+  --primary-foreground: oklch(1 0 0);
+  --ring: oklch(0.72 0.12 262);
+}
+
+.dark .site-theme {
+  --primary: oklch(0.72 0.14 262);
+  --primary-foreground: oklch(0.18 0.03 265);
+  --ring: oklch(0.55 0.1 262);
+}
+
+:root {
+  --radius: 1rem;
+
+  /* Canvas: airy blue-white, like the reference screens */
+  --background: oklch(0.975 0.012 255);
+  --foreground: oklch(0.18 0.025 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.025 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.025 265);
+
+  /* Primary: confident periwinkle blue */
+  --primary: oklch(0.6 0.17 262);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.93 0.035 258);
+  --secondary-foreground: oklch(0.3 0.07 262);
+  --muted: oklch(0.95 0.015 258);
+  --muted-foreground: oklch(0.5 0.03 262);
+  --accent: oklch(0.93 0.035 258);
+  --accent-foreground: oklch(0.2 0.04 265);
+  --destructive: oklch(0.62 0.21 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.91 0.022 258);
+  --input: oklch(0.9 0.025 258);
+  --ring: oklch(0.72 0.12 262);
+
+  /* Brand accents */
+  --sky: oklch(0.74 0.12 262);
+  --sky-soft: oklch(0.89 0.05 258);
+  --sun: oklch(0.86 0.16 88);
+  --sun-soft: oklch(0.95 0.07 92);
+  --candy: oklch(0.8 0.13 335);
+  --candy-soft: oklch(0.92 0.06 335);
+  --mint: oklch(0.85 0.13 145);
+  --mint-soft: oklch(0.94 0.06 145);
+  --ink: oklch(0.17 0.02 270);
+  --ink-foreground: oklch(0.98 0 0);
+
+  --chart-1: oklch(0.74 0.12 262);
+  --chart-2: oklch(0.86 0.16 88);
+  --chart-3: oklch(0.8 0.13 335);
+  --chart-4: oklch(0.8 0.14 145);
+  --chart-5: oklch(0.6 0.17 262);
+
+  --sidebar: oklch(0.985 0.008 255);
+  --sidebar-foreground: oklch(0.18 0.025 265);
+  --sidebar-primary: oklch(0.6 0.17 262);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.93 0.035 258);
+  --sidebar-accent-foreground: oklch(0.2 0.04 265);
+  --sidebar-border: oklch(0.91 0.022 258);
+  --sidebar-ring: oklch(0.72 0.12 262);
+
+  /* Soft, blue-tinted elevation */
+  --shadow-color: oklch(0.45 0.12 262);
+  --shadow-2xs: 0 1px 2px 0 oklch(0.45 0.12 262 / 0.06);
+  --shadow-xs: 0 1px 3px 0 oklch(0.45 0.12 262 / 0.08);
+  --shadow-sm: 0 2px 6px -1px oklch(0.45 0.12 262 / 0.1);
+  --shadow: 0 4px 12px -2px oklch(0.45 0.12 262 / 0.12);
+  --shadow-md: 0 8px 20px -6px oklch(0.45 0.12 262 / 0.18);
+  --shadow-lg: 0 14px 32px -10px oklch(0.45 0.12 262 / 0.22);
+  --shadow-xl: 0 22px 44px -14px oklch(0.45 0.12 262 / 0.26);
+  --shadow-2xl: 0 30px 60px -18px oklch(0.45 0.12 262 / 0.32);
+}
+
+.dark {
+  --background: oklch(0.17 0.025 265);
+  --foreground: oklch(0.96 0.01 258);
+  --card: oklch(0.22 0.03 265);
+  --card-foreground: oklch(0.96 0.01 258);
+  --popover: oklch(0.22 0.03 265);
+  --popover-foreground: oklch(0.96 0.01 258);
+  --primary: oklch(0.72 0.14 262);
+  --primary-foreground: oklch(0.15 0.03 265);
+  --secondary: oklch(0.28 0.04 265);
+  --secondary-foreground: oklch(0.9 0.03 258);
+  --muted: oklch(0.26 0.03 265);
+  --muted-foreground: oklch(0.72 0.03 260);
+  --accent: oklch(0.28 0.04 265);
+  --accent-foreground: oklch(0.96 0.01 258);
+  --destructive: oklch(0.7 0.19 22);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.3 0.035 265);
+  --input: oklch(0.32 0.035 265);
+  --ring: oklch(0.55 0.1 262);
+
+  --sky: oklch(0.55 0.13 262);
+  --sky-soft: oklch(0.32 0.07 262);
+  --sun: oklch(0.82 0.15 88);
+  --sun-soft: oklch(0.36 0.07 88);
+  --candy: oklch(0.65 0.14 335);
+  --candy-soft: oklch(0.33 0.07 335);
+  --mint: oklch(0.72 0.13 145);
+  --mint-soft: oklch(0.32 0.06 145);
+  --ink: oklch(0.96 0.01 258);
+  --ink-foreground: oklch(0.17 0.025 265);
+
+  --chart-1: oklch(0.72 0.14 262);
+  --chart-2: oklch(0.82 0.15 88);
+  --chart-3: oklch(0.7 0.14 335);
+  --chart-4: oklch(0.72 0.13 145);
+  --chart-5: oklch(0.55 0.13 262);
+
+  --sidebar: oklch(0.2 0.028 265);
+  --sidebar-foreground: oklch(0.96 0.01 258);
+  --sidebar-primary: oklch(0.72 0.14 262);
+  --sidebar-primary-foreground: oklch(0.15 0.03 265);
+  --sidebar-accent: oklch(0.28 0.04 265);
+  --sidebar-accent-foreground: oklch(0.96 0.01 258);
+  --sidebar-border: oklch(0.3 0.035 265);
+  --sidebar-ring: oklch(0.55 0.1 262);
+
+  --shadow-color: oklch(0 0 0);
+  --shadow-2xs: 0 1px 2px 0 oklch(0 0 0 / 0.3);
+  --shadow-xs: 0 1px 3px 0 oklch(0 0 0 / 0.3);
+  --shadow-sm: 0 2px 6px -1px oklch(0 0 0 / 0.35);
+  --shadow: 0 4px 12px -2px oklch(0 0 0 / 0.4);
+  --shadow-md: 0 8px 20px -6px oklch(0 0 0 / 0.45);
+  --shadow-lg: 0 14px 32px -10px oklch(0 0 0 / 0.5);
+  --shadow-xl: 0 22px 44px -14px oklch(0 0 0 / 0.55);
+  --shadow-2xl: 0 30px 60px -18px oklch(0 0 0 / 0.6);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground selection:bg-primary font-sans selection:text-white;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif tracking-tight;
+  }
+}
+
+@layer components {
+  /* Sunburst rays behind hero areas (leaderboard / dashboard header look) */
+  .peerly-rays {
+    background-image:
+      radial-gradient(circle at 50% 0%, transparent 0, var(--background) 72%),
+      repeating-conic-gradient(
+        from 0deg at 50% 0%,
+        color-mix(in oklch, var(--sky-soft) 70%, transparent) 0deg 8deg,
+        transparent 8deg 16deg
+      );
+  }
+
+  /* Chunky rounded card used across Peerly */
+  .peerly-card {
+    @apply bg-card rounded-3xl border border-white/70 shadow-md dark:border-white/5;
+  }
+
+  /* Pill chip, e.g. "💎 900", "November" */
+  .peerly-chip {
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold;
+  }
+
+  /* Lift effect for tappable cards */
+  .peerly-press {
+    @apply transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98];
+  }
+}
+
+/* Leaves room for the fixed mobile bottom tab bar */
+.pb-safe-nav {
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 768px) {
+  .pb-safe-nav {
+    padding-bottom: 0;
+  }
+}
+
+/* View Transition Animations for Theme Toggle */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: fade-in;
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* BProgress styling */
+:root {
+  --bprogress-color: var(--primary);
+  --bprogress-height: 3px;
+  --bprogress-box-shadow: 0 0 10px var(--primary);
+}
+
+.bprogress {
+  pointer-events: none;
+}
+
+.bprogress .bar {
+  background: linear-gradient(
+    90deg,
+    var(--sky),
+    var(--primary),
+    var(--candy)
+  ) !important;
+}
+
+@keyframes spotlight {
+  0% {
+    opacity: 0;
+    transform: translate(-72%, -62%) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -40%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float {
+    animation: none;
+  }
+}

@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from "next/server";
+
+// Routes that require a signed-in user. Quiz *play* routes stay public so
+// anyone with a join code can play without an account.
+const PROTECTED_PREFIXES = ["/dashboard", "/profile", "/quiz", "/experiences"];
+
+const QUIZ_PUBLIC_PREFIXES = ["/quiz/join", "/quiz/play"];
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (pathname === "/api/auth/error") {
+    const loginUrl = new URL("/auth/login", request.url);
+    const error = request.nextUrl.searchParams.get("error");
+    const description = request.nextUrl.searchParams.get("error_description");
+
+    if (error) loginUrl.searchParams.set("error", error);
+    if (description) loginUrl.searchParams.set("error_description", description);
+
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const isQuizPublic = QUIZ_PUBLIC_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+
+  const isProtected =
+    !isQuizPublic &&
+    PROTECTED_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    );
+
+  if (!isProtected) return NextResponse.next();
+
+  // Better Auth stores the session in this cookie
+  const sessionCookie =
+    request.cookies.get("better-auth.session_token") ??
+    request.cookies.get("__Secure-better-auth.session_token");
+
+  if (!sessionCookie?.value) {
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [
+    "/api/auth/error",
+    "/dashboard/:path*",
+    "/profile/:path*",
+    "/quiz",
+    "/quiz/events/:path*",
+    "/quiz/sessions/:path*",
+    "/experiences/:path*",
+  ],
+};
