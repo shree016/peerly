@@ -330,6 +330,12 @@ export const quizSessionParticipant = pgTable(
     rank: integer("rank"),
     isConnected: boolean("is_connected").notNull().default(true),
     disconnectedAt: timestamp("disconnected_at", { mode: "date" }),
+    // Set when a participant is removed mid-quiz (focus-mode violation or by
+    // the host). The row and its answers are kept so analytics stay complete;
+    // removed participants are excluded from live counts and leaderboards.
+    removedAt: timestamp("removed_at", { mode: "date" }),
+    // "focus_violation" | "host"
+    removalReason: text("removal_reason"),
     participantToken: text("participant_token").notNull().unique(),
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
   },

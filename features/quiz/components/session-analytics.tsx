@@ -46,6 +46,16 @@ export interface AnalyticsParticipant {
   rank: number | null;
   answered_count: number;
   correct_count: number;
+  /** Set when the participant was removed mid-quiz; their answers are kept. */
+  removed_at?: string | null;
+  removal_reason?: string | null;
+}
+
+function removalLabel(participant: AnalyticsParticipant): string | null {
+  if (!participant.removed_at) return null;
+  return participant.removal_reason === "host"
+    ? "Removed by host"
+    : "Removed: left quiz focus";
 }
 
 export interface AnalyticsAnswer {
@@ -153,6 +163,14 @@ function ParticipantChip({
     >
       <QuizAvatar emoji={participant.avatar} size="xs" />
       <span className="truncate">{participant.display_name}</span>
+      {participant.removed_at && (
+        <span
+          className="text-destructive shrink-0 text-[10px] font-medium"
+          title={removalLabel(participant) ?? undefined}
+        >
+          removed
+        </span>
+      )}
     </span>
   );
 }
@@ -264,8 +282,10 @@ export function SessionAnalytics({
   const overallAccuracy =
     totalSlots > 0 ? Math.round((correctTotal / totalSlots) * 100) : null;
 
+  // Participants who finished are ranked first; removed ones follow, unranked.
   const leaderboard = [...participants].sort(
     (a, b) =>
+      Number(Boolean(a.removed_at)) - Number(Boolean(b.removed_at)) ||
       b.total_score - a.total_score ||
       a.display_name.localeCompare(b.display_name),
   );
@@ -461,9 +481,12 @@ export function SessionAnalytics({
               </TableHeader>
               <TableBody>
                 {leaderboard.map((p, index) => (
-                  <TableRow key={p.id}>
+                  <TableRow
+                    key={p.id}
+                    className={p.removed_at ? "opacity-70" : undefined}
+                  >
                     <TableCell className="text-muted-foreground tabular-nums">
-                      {index + 1}
+                      {p.removed_at ? "—" : index + 1}
                     </TableCell>
                     <TableCell>
                       <span className="flex items-center gap-2">
@@ -471,6 +494,14 @@ export function SessionAnalytics({
                         <span className="truncate font-medium">
                           {p.display_name}
                         </span>
+                        {p.removed_at && (
+                          <Badge
+                            variant="outline"
+                            className="text-destructive border-destructive/40 shrink-0"
+                          >
+                            {removalLabel(p)}
+                          </Badge>
+                        )}
                       </span>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-right tabular-nums">

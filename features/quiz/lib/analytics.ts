@@ -181,6 +181,7 @@ export async function generateSessionCsv(sessionId: string): Promise<string> {
       escapeCsv(`Q${q.position}: ${q.text.slice(0, 30)}`),
     ),
     "Total Score",
+    "Status",
   ];
 
   const rows = participants.map((p) => {
@@ -189,7 +190,17 @@ export async function generateSessionCsv(sessionId: string): Promise<string> {
       const score = pAnswers.get(q.id);
       return score !== undefined ? String(score) : "";
     });
-    return [escapeCsv(p.displayName), ...scores, String(p.totalScore)];
+    const status = p.removedAt
+      ? p.removalReason === "host"
+        ? "Removed by host"
+        : "Removed (left quiz focus)"
+      : "Completed";
+    return [
+      escapeCsv(p.displayName),
+      ...scores,
+      String(p.totalScore),
+      status,
+    ];
   });
 
   return [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");

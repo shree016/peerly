@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, isNull } from "drizzle-orm";
 
 import db from "@/db";
 import {
@@ -89,8 +89,12 @@ export async function loadDeterministicParticipantReport(
     throw new QuizApiError("UNAUTHORIZED", "Participant not found.", 401);
   }
 
+  // Cohort stats (rank, percentile) only count participants who finished.
   const allParticipants = await db.query.quizSessionParticipant.findMany({
-    where: eq(quizSessionParticipant.sessionId, sessionId),
+    where: and(
+      eq(quizSessionParticipant.sessionId, sessionId),
+      isNull(quizSessionParticipant.removedAt),
+    ),
     columns: { totalScore: true },
     orderBy: [
       desc(quizSessionParticipant.totalScore),

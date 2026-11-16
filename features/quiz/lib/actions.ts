@@ -56,6 +56,87 @@ import type {
 import { validateDisplayName } from "./validation";
 import { DEFAULT_QUIZ_AVATAR } from "./quiz-avatars";
 
+// ── Participant helpers ─────────────────────────────────────────────────────
+// Removed participants keep their row (and answers) for analytics, so every
+// live query — counts, leaderboard, token auth — must filter on these.
+
+/** WHERE clause for participants of a session that have not been removed. */
+function activeParticipantsOf(sessionId: string) {
+  return and(
+    eq(quizSessionParticipant.sessionId, sessionId),
+    isNull(quizSessionParticipant.removedAt),
+  );
+}
+
+async function countActiveParticipants(sessionId: string): Promise<number> {
+  const [{ value }] = await db
+    .select({ value: count() })
+    .from(quizSessionParticipant)
+    .where(activeParticipantsOf(sessionId));
+  return value;
+}
+
+/** Answers to a question from participants that have not been removed. */
+async function countActiveAnswers(
+  sessionId: string,
+  questionId: string,
+): Promise<number> {
+  const [{ value }] = await db
+    .select({ value: count() })
+    .from(quizParticipantAnswer)
+    .innerJoin(
+      quizSessionParticipant,
+      eq(quizParticipantAnswer.participantId, quizSessionParticipant.id),
+    )
+    .where(
+      and(
+        eq(quizParticipantAnswer.sessionId, sessionId),
+        eq(quizParticipantAnswer.questionId, questionId),
+        isNull(quizSessionParticipant.removedAt),
+      ),
+    );
+  return value;
+}
+
+type RemovalReason = "focus_violation" | "host";
+
+/**
+ * Removes a participant from a session. In the lobby nothing has been
+ * answered yet, so the row is deleted (freeing the display name). Once the
+ * quiz has started the row is kept and marked removed so their answers still
+ * appear in analytics and the CSV export.
+ */
+async function removeParticipantFromSession(
+  sessionId: string,
+  participantId: string,
+  reason: RemovalReason,
+) {
+  const session = await db.query.quizSession.findFirst({
+    where: eq(quizSession.id, sessionId),
+    columns: { status: true },
+  });
+
+  if (!session || session.status === "lobby") {
+    await db
+      .delete(quizSessionParticipant)
+      .where(eq(quizSessionParticipant.id, participantId));
+  } else {
+    await db
+      .update(quizSessionParticipant)
+      .set({
+        removedAt: new Date(),
+        removalReason: reason,
+        isConnected: false,
+      })
+      .where(eq(quizSessionParticipant.id, participantId));
+  }
+
+  await broadcastSessionEvent(sessionId, "participant_removed", {
+    participantId,
+  });
+  await broadcastParticipantCounts(sessionId);
+}
+
 const ACTIVE_SESSION_STATUSES = [
   "countdown",
   "question",
@@ -943,7 +1024,7 @@ async function broadcastLeaderboard(
   isFinal: boolean,
 ) {
   const participants = await db.query.quizSessionParticipant.findMany({
-    where: eq(quizSessionParticipant.sessionId, sessionId),
+    where: activeParticipantsOf(sessionId),
     orderBy: [
       desc(quizSessionParticipant.totalScore),
       asc(quizSessionParticipant.displayName),
@@ -1168,7 +1249,7 @@ export async function joinQuizSession(
     const existingParticipant = await db.query.quizSessionParticipant.findFirst({
       where: and(
         eq(quizSessionParticipant.participantToken, data.participantToken.trim()),
-        eq(quizSessionParticipant.sessionId, sessionId),
+        activeParticipantsOf(sessionId),
       ),
     });
 
@@ -1250,10 +1331,7 @@ export async function joinQuizSession(
     );
   }
 
-  const [{ value: participantCount }] = await db
-    .select({ value: count() })
-    .from(quizSessionParticipant)
-    .where(eq(quizSessionParticipant.sessionId, sessionId));
+  const participantCount = await countActiveParticipants(sessionId);
 
   if (!validateDisplayName(data.displayName)) {
     throw new QuizApiError(
@@ -1357,7 +1435,7 @@ export async function submitQuizAnswer(
   const participant = await db.query.quizSessionParticipant.findFirst({
     where: and(
       eq(quizSessionParticipant.participantToken, participantToken),
-      eq(quizSessionParticipant.sessionId, sessionId),
+      activeParticipantsOf(sessionId),
     ),
     columns: { id: true },
   });
@@ -1507,20 +1585,8 @@ export async function submitQuizAnswer(
     })
     .where(eq(quizSessionParticipant.id, participant.id));
 
-  const [{ value: answeredCount }] = await db
-    .select({ value: count() })
-    .from(quizParticipantAnswer)
-    .where(
-      and(
-        eq(quizParticipantAnswer.sessionId, sessionId),
-        eq(quizParticipantAnswer.questionId, data.questionId),
-      ),
-    );
-
-  const [{ value: totalParticipants }] = await db
-    .select({ value: count() })
-    .from(quizSessionParticipant)
-    .where(eq(quizSessionParticipant.sessionId, sessionId));
+  const answeredCount = await countActiveAnswers(sessionId, data.questionId);
+  const totalParticipants = await countActiveParticipants(sessionId);
 
   await broadcastSessionEvent(sessionId, "answer_count_updated", {
     questionId: data.questionId,
@@ -1579,24 +1645,11 @@ export async function getQuizSessionLive(sessionId: string) {
     throw new QuizApiError("SESSION_NOT_FOUND", "Session not found.", 404);
   }
 
-  const [{ value: totalParticipants }] = await db
-    .select({ value: count() })
-    .from(quizSessionParticipant)
-    .where(eq(quizSessionParticipant.sessionId, sessionId));
+  const totalParticipants = await countActiveParticipants(sessionId);
 
-  let answeredCount = 0;
-  if (session.currentQuestionId) {
-    const [{ value }] = await db
-      .select({ value: count() })
-      .from(quizParticipantAnswer)
-      .where(
-        and(
-          eq(quizParticipantAnswer.sessionId, sessionId),
-          eq(quizParticipantAnswer.questionId, session.currentQuestionId),
-        ),
-      );
-    answeredCount = value;
-  }
+  const answeredCount = session.currentQuestionId
+    ? await countActiveAnswers(sessionId, session.currentQuestionId)
+    : 0;
 
   return {
     status: session.status,
@@ -1653,6 +1706,8 @@ export async function getQuizAnalytics(sessionId: string) {
         avatar: true,
         totalScore: true,
         rank: true,
+        removedAt: true,
+        removalReason: true,
       },
       orderBy: [
         desc(quizSessionParticipant.totalScore),
@@ -1704,6 +1759,8 @@ export async function getQuizAnalytics(sessionId: string) {
       rank: p.rank,
       answered_count: answeredCountByParticipant.get(p.id) ?? 0,
       correct_count: correctCountByParticipant.get(p.id) ?? 0,
+      removed_at: p.removedAt?.toISOString() ?? null,
+      removal_reason: p.removalReason,
     })),
     answers: answers.map((a) => ({
       participant_id: a.participantId,
@@ -1820,7 +1877,7 @@ export async function listQuizSessionParticipants(sessionId: string) {
 
   const [participants, questions, answers] = await Promise.all([
     db.query.quizSessionParticipant.findMany({
-      where: eq(quizSessionParticipant.sessionId, sessionId),
+      where: activeParticipantsOf(sessionId),
       columns: {
         id: true,
         displayName: true,
@@ -1877,24 +1934,11 @@ async function broadcastParticipantCounts(sessionId: string) {
     columns: { status: true, currentQuestionId: true },
   });
 
-  const [{ value: totalParticipants }] = await db
-    .select({ value: count() })
-    .from(quizSessionParticipant)
-    .where(eq(quizSessionParticipant.sessionId, sessionId));
+  const totalParticipants = await countActiveParticipants(sessionId);
 
-  let answeredCount = 0;
-  if (session?.currentQuestionId) {
-    const [{ value }] = await db
-      .select({ value: count() })
-      .from(quizParticipantAnswer)
-      .where(
-        and(
-          eq(quizParticipantAnswer.sessionId, sessionId),
-          eq(quizParticipantAnswer.questionId, session.currentQuestionId),
-        ),
-      );
-    answeredCount = value;
-  }
+  const answeredCount = session?.currentQuestionId
+    ? await countActiveAnswers(sessionId, session.currentQuestionId)
+    : 0;
 
   await broadcastSessionEvent(sessionId, "participants_updated", {
     totalParticipants,
@@ -1916,7 +1960,7 @@ export async function removeQuizParticipant(
   const participant = await db.query.quizSessionParticipant.findFirst({
     where: and(
       eq(quizSessionParticipant.participantToken, participantToken),
-      eq(quizSessionParticipant.sessionId, sessionId),
+      activeParticipantsOf(sessionId),
     ),
     columns: { id: true },
   });
@@ -1925,14 +1969,8 @@ export async function removeQuizParticipant(
     throw new QuizApiError("UNAUTHORIZED", "Invalid participant token.", 401);
   }
 
-  await db
-    .delete(quizSessionParticipant)
-    .where(eq(quizSessionParticipant.id, participant.id));
-
-  await broadcastSessionEvent(sessionId, "participant_removed", {
-    participantId: participant.id,
-  });
-  await broadcastParticipantCounts(sessionId);
+  // The play page only calls /leave when focus mode removes the player.
+  await removeParticipantFromSession(sessionId, participant.id, "focus_violation");
 
   return { removed: true, participantId: participant.id };
 }
@@ -1963,7 +2001,7 @@ export async function removeQuizParticipantByAdmin(
   const participant = await db.query.quizSessionParticipant.findFirst({
     where: and(
       eq(quizSessionParticipant.id, participantId),
-      eq(quizSessionParticipant.sessionId, sessionId),
+      activeParticipantsOf(sessionId),
     ),
     columns: { id: true },
   });
@@ -1976,14 +2014,7 @@ export async function removeQuizParticipantByAdmin(
     );
   }
 
-  await db
-    .delete(quizSessionParticipant)
-    .where(eq(quizSessionParticipant.id, participant.id));
-
-  await broadcastSessionEvent(sessionId, "participant_removed", {
-    participantId: participant.id,
-  });
-  await broadcastParticipantCounts(sessionId);
+  await removeParticipantFromSession(sessionId, participant.id, "host");
 
   return { removed: true, participantId: participant.id };
 }
@@ -1996,7 +2027,7 @@ export async function updateQuizParticipantProfile(
   const participant = await db.query.quizSessionParticipant.findFirst({
     where: and(
       eq(quizSessionParticipant.participantToken, participantToken),
-      eq(quizSessionParticipant.sessionId, sessionId),
+      activeParticipantsOf(sessionId),
     ),
     columns: { id: true, displayName: true, avatar: true },
   });
@@ -2094,10 +2125,7 @@ export async function updateQuizParticipantProfile(
       );
     }
 
-    const [{ value: totalParticipants }] = await db
-      .select({ value: count() })
-      .from(quizSessionParticipant)
-      .where(eq(quizSessionParticipant.sessionId, sessionId));
+    const totalParticipants = await countActiveParticipants(sessionId);
     await broadcastSessionEvent(sessionId, "participants_updated", {
       totalParticipants,
     });
