@@ -1,5 +1,5 @@
 /**
- * Who can create and manage quizzes on Peerly.
+ * Who can create and manage quizzes on Peeerly.
  *
  * The default list is the MCA Section B activity coordinators. Add more
  * without a code change via a comma-separated env var:

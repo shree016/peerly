@@ -43,18 +43,18 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-4 sm:px-6 sm:pt-8">
-      <section className="peerly-rays peerly-card flex flex-col items-center px-6 pt-8 pb-6 text-center">
+      <section className="peeerly-rays peeerly-card flex flex-col items-center px-6 pt-8 pb-6 text-center">
         <Avatar className="border-sky-soft size-24 border-[6px] shadow-md">
           <AvatarImage src={resolveProfileImageSrc(user.image, user.updatedAt)} alt="" />
           <AvatarFallback className="bg-sky-soft text-2xl font-bold">{initials}</AvatarFallback>
         </Avatar>
-        <h1 className="mt-3 text-2xl font-bold">{user.name ?? "Peerly member"}</h1>
+        <h1 className="mt-3 text-2xl font-bold">{user.name ?? "Peeerly member"}</h1>
         <p className="text-muted-foreground max-w-full truncate text-sm">{user.email}</p>
         {user.bio && <p className="mt-2 max-w-md text-sm">{user.bio}</p>}
         <div className="mt-3 flex flex-wrap justify-center gap-2">
-          <span className="peerly-chip bg-sun text-black">💎 {mine.length} shared</span>
+          <span className="peeerly-chip bg-sun text-black">💎 {mine.length} shared</span>
           {(roles.length ? roles : ["Student"]).map((role) => (
-            <span key={role} className="peerly-chip bg-sky-soft">
+            <span key={role} className="peeerly-chip bg-sky-soft">
               {role}
             </span>
           ))}

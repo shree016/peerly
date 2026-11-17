@@ -1,5 +1,5 @@
 /**
- * Peerly database schema.
+ * Peeerly database schema.
  *
  * Tables: auth (user/session/account/verification), Placement Experiences
  * (interview_experience*), and Quiz (quiz_*).

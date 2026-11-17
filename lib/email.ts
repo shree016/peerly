@@ -65,7 +65,7 @@ export function buildVerificationEmailHtml({
 <html lang="en">
   <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #111827; max-width: 560px; margin: 0 auto; padding: 24px;">
     <p>${greeting}</p>
-    <p>Thanks for signing up. Please verify your email address to continue using Peerly</p>
+    <p>Thanks for signing up. Please verify your email address to continue using Peeerly</p>
     <p style="margin: 32px 0;">
       <a href="${url}" style="display: inline-block; background: #2f6bff; color: #ffffff; text-decoration: none; padding: 12px 22px; border-radius: 999px; font-weight: 600;">
         Verify email address

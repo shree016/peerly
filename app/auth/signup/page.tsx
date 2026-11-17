@@ -92,7 +92,7 @@ const SignUp = () => {
     <div className="flex w-full items-center justify-center">
       <div className="flex w-full flex-col items-center gap-4">
         <div className="text-center">
-          <span className="peerly-chip bg-sun-soft border border-sun/50">🚀 Join Peerly</span>
+          <span className="peeerly-chip bg-sun-soft border border-sun/50">🚀 Join Peeerly</span>
           <h1 className="mt-3 text-3xl font-bold sm:text-4xl">
             Create your <span className="text-primary">account</span>
           </h1>

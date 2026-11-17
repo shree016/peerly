@@ -47,7 +47,7 @@ export default async function ExperiencesPage({
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       <section className="bg-candy-soft relative mt-4 overflow-hidden rounded-[2rem] p-6 shadow-lg sm:mt-8 sm:p-10">
-        <span className="peerly-chip bg-white/80 dark:bg-white/10">
+        <span className="peeerly-chip bg-white/80 dark:bg-white/10">
           <BriefcaseBusiness className="size-3.5" /> Community knowledge base
         </span>
         <h1 className="mt-4 max-w-2xl text-3xl leading-[1.08] font-bold sm:text-5xl">

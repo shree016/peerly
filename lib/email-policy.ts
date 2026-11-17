@@ -22,7 +22,7 @@ export const EMAIL_PLACEHOLDER = EMAIL_DOMAIN_RESTRICTED
   : "you@example.com";
 
 export const EMAIL_POLICY_ERROR = EMAIL_DOMAIN_RESTRICTED
-  ? `Only @${ALLOWED_DOMAIN} email addresses are allowed on Peerly.`
+  ? `Only @${ALLOWED_DOMAIN} email addresses are allowed on Peeerly.`
   : "Please enter a valid email address.";
 
 export const EMAIL_POLICY_ERROR_CODE = "email_domain_not_allowed";

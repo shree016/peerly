@@ -39,7 +39,7 @@ const PLACES = [
 ] as const;
 
 /**
- * Three-step podium in the Peerly style (yellow · green · pink blocks with
+ * Three-step podium in the Peeerly style (yellow · green · pink blocks with
  * floating avatars and pill-shaped score chips). Used by the live-quiz final
  * leaderboard and the dashboard's company leaderboard.
  */
@@ -83,7 +83,7 @@ export function Podium({
               {entry.name}
               {entry.highlight ? " (you)" : ""}
             </p>
-            <span className="peerly-chip bg-card mt-1 mb-2 border shadow-xs">
+            <span className="peeerly-chip bg-card mt-1 mb-2 border shadow-xs">
               {entry.value}
             </span>
 
@@ -144,7 +144,7 @@ export function RankRow({
           <p className="text-muted-foreground truncate text-xs">{subtitle}</p>
         )}
         {value && (
-          <span className="peerly-chip bg-muted mt-0.5 px-2 py-0.5">{value}</span>
+          <span className="peeerly-chip bg-muted mt-0.5 px-2 py-0.5">{value}</span>
         )}
       </div>
       {trailing}

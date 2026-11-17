@@ -55,7 +55,7 @@ export default async function LandingPage() {
         <HeroIllustration className="order-1 w-full md:order-2" />
 
         <div className="order-2 flex flex-col items-center text-center md:order-1 md:items-start md:text-left">
-          <span className="peerly-chip bg-sun-soft text-foreground mb-4 border border-sun/50">
+          <span className="peeerly-chip bg-sun-soft text-foreground mb-4 border border-sun/50">
             <Sparkles className="size-3.5" /> Built by students, for students
           </span>
           <h1 className="text-4xl leading-[1.08] font-bold sm:text-5xl lg:text-6xl">
@@ -64,7 +64,7 @@ export default async function LandingPage() {
             <span className="text-primary">Crack placements</span> together.
           </h1>
           <p className="text-muted-foreground mt-4 max-w-md text-base sm:text-lg">
-            Peerly brings your class&apos;s live quizzes and your seniors&apos;
+            Peeerly brings your class&apos;s live quizzes and your seniors&apos;
             placement experiences into one friendly place.
           </p>
 
@@ -81,7 +81,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Quick join ───────────────────────────────────────────────── */}
-      <section className="peerly-card mt-12 flex flex-col items-center gap-4 p-5 text-center sm:flex-row sm:justify-between sm:p-6 sm:text-left">
+      <section className="peeerly-card mt-12 flex flex-col items-center gap-4 p-5 text-center sm:flex-row sm:justify-between sm:p-6 sm:text-left">
         <div>
           <h2 className="text-lg font-bold sm:text-xl">Got a quiz code?</h2>
           <p className="text-muted-foreground text-sm">
@@ -99,9 +99,9 @@ export default async function LandingPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <Link
             href="/quiz/join"
-            className="peerly-press group relative overflow-hidden rounded-[2rem] bg-linear-to-br from-sky to-primary p-6 text-white shadow-lg sm:p-8"
+            className="peeerly-press group relative overflow-hidden rounded-[2rem] bg-linear-to-br from-sky to-primary p-6 text-white shadow-lg sm:p-8"
           >
-            <span className="peerly-chip bg-white/25 backdrop-blur">
+            <span className="peeerly-chip bg-white/25 backdrop-blur">
               <Gamepad2 className="size-3.5" /> Live Quiz
             </span>
             <h3 className="mt-4 max-w-[14rem] text-3xl leading-tight font-bold">
@@ -122,9 +122,9 @@ export default async function LandingPage() {
 
           <Link
             href="/experiences"
-            className="peerly-press group bg-candy-soft relative overflow-hidden rounded-[2rem] p-6 shadow-lg sm:p-8"
+            className="peeerly-press group bg-candy-soft relative overflow-hidden rounded-[2rem] p-6 shadow-lg sm:p-8"
           >
-            <span className="peerly-chip bg-white/70 dark:bg-white/10">
+            <span className="peeerly-chip bg-white/70 dark:bg-white/10">
               <BriefcaseBusiness className="size-3.5" /> Placements
             </span>
             <h3 className="mt-4 max-w-[15rem] text-3xl leading-tight font-bold">
@@ -153,7 +153,7 @@ export default async function LandingPage() {
             { label: "Rounds", value: stats.roundCount, emoji: "🧩" },
             { label: "Resources", value: stats.resourceCount, emoji: "📎" },
           ].map((tile) => (
-            <div key={tile.label} className="peerly-card p-4">
+            <div key={tile.label} className="peeerly-card p-4">
               <span className="text-2xl">{tile.emoji}</span>
               <p className="mt-1 font-serif text-2xl font-bold">{tile.value}</p>
               <p className="text-muted-foreground text-xs font-medium">{tile.label}</p>
@@ -164,10 +164,10 @@ export default async function LandingPage() {
 
       {/* ── How it works ─────────────────────────────────────────────── */}
       <section className="mt-16">
-        <h2 className="mb-5 text-2xl font-bold sm:text-3xl">How Peerly works</h2>
+        <h2 className="mb-5 text-2xl font-bold sm:text-3xl">How Peeerly works</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {steps.map((step, i) => (
-            <div key={step.title} className="peerly-card p-6">
+            <div key={step.title} className="peeerly-card p-6">
               <div className="flex items-center gap-3">
                 <span
                   className={`${step.tone} flex size-12 items-center justify-center rounded-2xl text-2xl`}

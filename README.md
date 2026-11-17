@@ -1,6 +1,6 @@
-# Peerly
+# Peeerly
 
-Peerly is a student platform with three core features:
+Peeerly is a student platform with three core features:
 
 | Feature | Routes |
 | --- | --- |
@@ -37,10 +37,13 @@ Notable variables:
 
 ### 3. OAuth / app URL
 
-If Peerly runs on a new domain, update these:
+Production runs on **https://peeerly.tech**. For production (e.g. Vercel env vars) set:
 
-- `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL`
-- In Google Cloud Console, add the authorized redirect URI `https://<domain>/api/auth/callback/google`
+- `BETTER_AUTH_URL=https://peeerly.tech` and `NEXT_PUBLIC_APP_URL=https://peeerly.tech`
+- In Google Cloud Console, add the authorized redirect URI `https://peeerly.tech/api/auth/callback/google`
+- In Resend, verify `peeerly.tech` and use e.g. `RESEND_FROM_EMAIL=Peeerly <noreply@peeerly.tech>`
+
+For any other domain, swap it in the same places.
 
 ### 4. Run
 
@@ -57,7 +60,7 @@ The design tokens live in `app/globals.css`:
 
 - Periwinkle `primary`
 - Brand accents `sky`, `sun`, `candy`, `mint` and `ink`, available as Tailwind classes (`bg-sun-soft`, `bg-ink`, …)
-- Helpers: `peerly-card`, `peerly-chip`, `peerly-rays`
+- Helpers: `peeerly-card`, `peeerly-chip`, `peeerly-rays`
 
 Fonts are Poppins for headings (via `font-serif`) and Plus Jakarta Sans for body text. Dark mode is supported.
 

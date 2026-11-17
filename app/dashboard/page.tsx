@@ -102,7 +102,7 @@ export default async function DashboardPage() {
               {greeting()} 👋
             </p>
             <h1 className="truncate text-xl font-bold sm:text-2xl">{firstName}</h1>
-            <span className="peerly-chip bg-card mt-0.5 border px-2.5 py-0.5 text-[0.7rem]">
+            <span className="peeerly-chip bg-card mt-0.5 border px-2.5 py-0.5 text-[0.7rem]">
               {isQuizAdmin ? "Quiz coordinator" : user.isCoordinator ? "Coordinator" : "Student"}
             </span>
           </div>
@@ -110,7 +110,7 @@ export default async function DashboardPage() {
         <Link
           href="/experiences/new"
           title="Experiences you've shared"
-          className="peerly-chip bg-card shrink-0 border px-3 py-2 text-sm shadow-sm"
+          className="peeerly-chip bg-card shrink-0 border px-3 py-2 text-sm shadow-sm"
         >
           <span className="bg-sun flex size-6 items-center justify-center rounded-full text-xs">
             💎
@@ -142,7 +142,7 @@ export default async function DashboardPage() {
           {isQuizAdmin ? (
             <Link
               href="/quiz"
-              className="peerly-press bg-sky-soft/60 flex items-center gap-4 rounded-[1.75rem] border p-4 shadow-sm"
+              className="peeerly-press bg-sky-soft/60 flex items-center gap-4 rounded-[1.75rem] border p-4 shadow-sm"
             >
               <span className="text-4xl">👑</span>
               <div className="min-w-0 flex-1">
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
           ) : (
             <Link
               href="/experiences/new"
-              className="peerly-press bg-sky-soft/60 flex items-center gap-4 rounded-[1.75rem] border p-4 shadow-sm"
+              className="peeerly-press bg-sky-soft/60 flex items-center gap-4 rounded-[1.75rem] border p-4 shadow-sm"
             >
               <span className="text-4xl">✍️</span>
               <div className="min-w-0 flex-1">
@@ -188,9 +188,9 @@ export default async function DashboardPage() {
             {latest ? (
               <Link
                 href={`/experiences/${latest.id}`}
-                className="peerly-press bg-candy-soft relative block overflow-hidden rounded-[2rem] p-5 shadow-lg sm:p-6"
+                className="peeerly-press bg-candy-soft relative block overflow-hidden rounded-[2rem] p-5 shadow-lg sm:p-6"
               >
-                <span className="peerly-chip bg-white/80 dark:bg-white/10">{latest.batch}</span>
+                <span className="peeerly-chip bg-white/80 dark:bg-white/10">{latest.batch}</span>
                 <h3 className="mt-3 max-w-[70%] text-2xl leading-tight font-bold">
                   {latest.companyName}
                 </h3>
@@ -224,7 +224,7 @@ export default async function DashboardPage() {
             {recent.length > 0 && (
               <div className="mt-3 space-y-2">
                 {recent.map((exp) => (
-                  <Link key={exp.id} href={`/experiences/${exp.id}`} className="peerly-press block">
+                  <Link key={exp.id} href={`/experiences/${exp.id}`} className="peeerly-press block">
                     <RankRow
                       rank={experiences.indexOf(exp) + 1}
                       avatar={
@@ -248,9 +248,9 @@ export default async function DashboardPage() {
         </div>
 
         {/* ── Companies leaderboard (podium) ───────────────────────────── */}
-        <aside className="peerly-card peerly-rays h-fit overflow-hidden p-4 sm:p-6">
+        <aside className="peeerly-card peeerly-rays h-fit overflow-hidden p-4 sm:p-6">
           <div className="mb-6 text-center">
-            <span className="peerly-chip bg-sun text-black">All batches</span>
+            <span className="peeerly-chip bg-sun text-black">All batches</span>
             <h2 className="bg-sky-soft mx-auto mt-2 w-fit rounded-full border px-6 py-2 text-lg font-bold shadow-sm">
               Top companies
             </h2>

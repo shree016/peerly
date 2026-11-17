@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The onboarding-style illustration from the Peerly theme: a sunshine-yellow
+ * The onboarding-style illustration from the Peeerly theme: a sunshine-yellow
  * blob, a tilted periwinkle speech bubble carrying the headline, a floating
  * trophy, and a lightbulb-over-book motif. Pure CSS + emoji, no image assets.
  */

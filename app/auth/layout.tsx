@@ -1,7 +1,7 @@
 import { HeroIllustration } from "@/features/landing/components/hero-illustration";
 
 /**
- * Shared frame for login / signup: the Peerly illustration on the left at
+ * Shared frame for login / signup: the Peeerly illustration on the left at
  * desktop widths, a slimmer banner on top at phone widths, form on the right.
  */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {

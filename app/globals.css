@@ -7,7 +7,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * ─── Peerly design system ────────────────────────────────────────────────────
+ * ─── Peeerly design system ────────────────────────────────────────────────────
  * Soft, playful "quiz app" look: airy periwinkle-blue canvas, chunky rounded
  * cards, sunshine-yellow highlights, candy pink / mint accents and a deep-ink
  * call-to-action. Headings use a rounded geometric display face (Poppins,
@@ -57,7 +57,7 @@
   --color-card: var(--card);
   --color-destructive-foreground: var(--destructive-foreground);
 
-  /* Peerly brand accents */
+  /* Peeerly brand accents */
   --color-sky: var(--sky);
   --color-sky-soft: var(--sky-soft);
   --color-sun: var(--sun);
@@ -283,7 +283,7 @@
 
 @layer components {
   /* Sunburst rays behind hero areas (leaderboard / dashboard header look) */
-  .peerly-rays {
+  .peeerly-rays {
     background-image:
       radial-gradient(circle at 50% 0%, transparent 0, var(--background) 72%),
       repeating-conic-gradient(
@@ -293,18 +293,18 @@
       );
   }
 
-  /* Chunky rounded card used across Peerly */
-  .peerly-card {
+  /* Chunky rounded card used across Peeerly */
+  .peeerly-card {
     @apply bg-card rounded-3xl border border-white/70 shadow-md dark:border-white/5;
   }
 
   /* Pill chip, e.g. "💎 900", "November" */
-  .peerly-chip {
+  .peeerly-chip {
     @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold;
   }
 
   /* Lift effect for tappable cards */
-  .peerly-press {
+  .peeerly-press {
     @apply transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98];
   }
 }

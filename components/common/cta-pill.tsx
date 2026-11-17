@@ -5,7 +5,7 @@ import { ChevronsRight, Lightbulb, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * The big "Get Started" pill from the Peerly onboarding screen: deep-ink
+ * The big "Get Started" pill from the Peeerly onboarding screen: deep-ink
  * capsule, periwinkle icon puck on the left, label centred, chevrons right.
  */
 export function CtaPill({

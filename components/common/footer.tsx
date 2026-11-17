@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { isImmersiveRoute } from "@/lib/navigation";
 
-import { PeerlyLogo } from "./navbar";
+import { PeeerlyLogo } from "./navbar";
 
 const Footer = () => {
   const pathname = usePathname();
@@ -13,9 +13,9 @@ const Footer = () => {
 
   return (
     <footer className="px-4 pt-16 pb-8 sm:px-6">
-      <div className="peerly-card mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 py-8 text-center sm:flex-row sm:justify-between sm:text-left">
+      <div className="peeerly-card mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 py-8 text-center sm:flex-row sm:justify-between sm:text-left">
         <div className="space-y-1">
-          <PeerlyLogo className="justify-center sm:justify-start" />
+          <PeeerlyLogo className="justify-center sm:justify-start" />
           <p className="text-muted-foreground text-sm">
             Learn together. Play together. Get placed together.
           </p>
@@ -31,7 +31,7 @@ const Footer = () => {
               Placement experiences
             </Link>
           </li>
-          <li className="text-muted-foreground">© {new Date().getFullYear()} Peerly</li>
+          <li className="text-muted-foreground">© {new Date().getFullYear()} Peeerly</li>
         </ul>
       </div>
     </footer>

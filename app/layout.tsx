@@ -14,7 +14,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
 
 // Display face. Bound to --font-serif so every `font-serif` heading picks up
-// Peerly's rounded geometric look.
+// Peeerly's rounded geometric look.
 const display = Poppins({
   variable: "--font-serif",
   weight: ["500", "600", "700", "800"],
@@ -34,23 +34,24 @@ const mono = JetBrains_Mono({
 });
 
 const description =
-  "Peerly — play live quizzes with your class and learn from seniors' real placement experiences.";
+  "Peeerly — play live quizzes with your class and learn from seniors' real placement experiences.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://peeerly.tech"),
   title: {
-    default: "Peerly",
-    template: "%s · Peerly",
+    default: "Peeerly",
+    template: "%s · Peeerly",
   },
   description,
-  applicationName: "Peerly",
+  applicationName: "Peeerly",
   openGraph: {
-    title: "Peerly",
+    title: "Peeerly",
     description,
-    siteName: "Peerly",
+    siteName: "Peeerly",
   },
   twitter: {
     card: "summary",
-    title: "Peerly",
+    title: "Peeerly",
     description,
   },
 };

@@ -89,9 +89,9 @@ const Login = () => {
     <div className="flex w-full items-center justify-center">
       <div className="flex w-full flex-col items-center gap-4">
         <div className="text-center">
-          <span className="peerly-chip bg-sun-soft border border-sun/50">👋 Welcome back</span>
+          <span className="peeerly-chip bg-sun-soft border border-sun/50">👋 Welcome back</span>
           <h1 className="mt-3 text-3xl font-bold sm:text-4xl">
-            Log in to <span className="text-primary">Peerly</span>
+            Log in to <span className="text-primary">Peeerly</span>
           </h1>
           {EMAIL_DOMAIN_RESTRICTED && (
             <p className="text-muted-foreground mt-2 max-w-md text-sm">

@@ -67,8 +67,8 @@ export function QuizBrandLogo({
         />
       ) : (
         <Image
-          src="/peerly.svg"
-          alt="Peerly"
+          src="/peeerly.svg"
+          alt="Peeerly"
           width={image}
           height={image}
           className="h-full w-full object-contain p-0.5"

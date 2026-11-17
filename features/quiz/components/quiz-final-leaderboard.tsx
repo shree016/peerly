@@ -50,10 +50,10 @@ export function QuizFinalLeaderboard({
 
   return (
     <div
-      className={`peerly-rays mx-auto w-full max-w-2xl flex-1 space-y-6 px-4 py-8 sm:px-6 ${className}`}
+      className={`peeerly-rays mx-auto w-full max-w-2xl flex-1 space-y-6 px-4 py-8 sm:px-6 ${className}`}
     >
       <div className="text-center">
-        <span className="peerly-chip bg-sun text-black">Final results</span>
+        <span className="peeerly-chip bg-sun text-black">Final results</span>
         <h2 className="bg-sky-soft mx-auto mt-2 w-fit rounded-full border px-8 py-2.5 text-xl font-bold shadow-sm sm:text-2xl">
           Leaderboard
         </h2>

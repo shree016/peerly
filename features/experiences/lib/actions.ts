@@ -406,7 +406,7 @@ export async function postComment(
       await sendEmail({
         to: experience.author.email,
         subject: `New question on your ${experience.companyName} placement experience`,
-        text: `${currentUser.name ?? "Someone"} asked a question on your ${experience.companyName} experience:\n\n"${data.body}"\n\nReply on Peerly: ${process.env.NEXT_PUBLIC_APP_URL ?? ""}/experiences/${experience.id}`,
+        text: `${currentUser.name ?? "Someone"} asked a question on your ${experience.companyName} experience:\n\n"${data.body}"\n\nReply on Peeerly: ${process.env.NEXT_PUBLIC_APP_URL ?? ""}/experiences/${experience.id}`,
       });
     } catch (error) {
       console.error("Failed to send question notification email:", error);

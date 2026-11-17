@@ -23,11 +23,11 @@ const desktopLinks: { key: NavKey; label: string; href: string }[] = [
   { key: "share", label: "Share yours", href: "/experiences/new" },
 ];
 
-export function PeerlyLogo({ className }: { className?: string }) {
+export function PeeerlyLogo({ className }: { className?: string }) {
   return (
     <span className={cn("flex items-center gap-2", className)}>
       <Image
-        src="/peerly.svg"
+        src="/peeerly.svg"
         alt=""
         width={36}
         height={36}
@@ -35,7 +35,7 @@ export function PeerlyLogo({ className }: { className?: string }) {
         priority
       />
       <span className="font-serif text-xl font-bold tracking-tight sm:text-2xl">
-        Peerly
+        Peeerly
       </span>
     </span>
   );
@@ -57,8 +57,8 @@ const Navbar = () => {
   return (
     <header className="sticky top-0 z-40 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-5 sm:pt-3">
       <nav className="bg-card/85 mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-[1.4rem] border px-3 py-2 shadow-sm backdrop-blur-md sm:px-5 sm:py-2.5">
-        <Link href={user ? "/dashboard" : "/"} aria-label="Peerly home">
-          <PeerlyLogo />
+        <Link href={user ? "/dashboard" : "/"} aria-label="Peeerly home">
+          <PeeerlyLogo />
         </Link>
 
         {/* Desktop links — on mobile these live in the bottom tab bar */}
