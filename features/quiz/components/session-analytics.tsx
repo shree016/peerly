@@ -322,7 +322,7 @@ export function SessionAnalytics({
 
       {/* ── Charts row ── */}
       {scorableSnapshots.length > 0 && participants.length > 0 && (
-        <div className="grid gap-6 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle className="flex items-center gap-1.5 text-sm">

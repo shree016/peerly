@@ -112,7 +112,7 @@ export function ExperienceBrowser({
           href="/experiences/new"
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {filtered.map((experience) => (
             <ExperienceCard key={experience.id} experience={experience} />
           ))}

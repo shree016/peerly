@@ -174,7 +174,7 @@ export function QuizQuestionLeaderboard({
 
   const outerClass = isPresenter
     ? `flex-1 max-w-2xl mx-auto w-full px-6 py-8 space-y-6 ${className}`
-    : `min-h-screen flex flex-col bg-background px-4 py-8 space-y-6 ${className}`;
+    : `min-h-dvh flex flex-col bg-background px-4 py-8 space-y-6 ${className}`;
 
   const listClass = isPresenter
     ? "space-y-2"

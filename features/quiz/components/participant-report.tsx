@@ -277,7 +277,7 @@ export function ParticipantReportView({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background px-4">
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-background px-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-muted-foreground text-sm">Loading your report…</p>
       </div>
@@ -286,7 +286,7 @@ export function ParticipantReportView({
 
   if (loadError || !payload) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4 text-center">
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background px-4 text-center">
         <AlertCircle className="text-destructive h-10 w-10" />
         <p className="max-w-md text-sm">{loadError ?? "Report unavailable."}</p>
         <Button asChild variant="outline">
@@ -299,7 +299,7 @@ export function ParticipantReportView({
   const { report, ai, pdf } = payload;
 
   return (
-    <div className="min-h-screen bg-background pb-16">
+    <div className="min-h-dvh bg-background pb-16">
       <div className="border-b bg-card/50">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-4">
           <Button asChild variant="ghost" size="sm" className="-ml-2">
@@ -439,7 +439,7 @@ export function ParticipantReportView({
             {ai.status === "ready" && ai.feedback && (
               <div className="space-y-4">
                 <p className="text-sm leading-relaxed">{ai.feedback.summary}</p>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <BulletBlock
                     title="Strengths"
                     icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
@@ -483,7 +483,7 @@ export function ParticipantReportView({
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <InsightCard title="Strengths" items={report.strengths} />
           <InsightCard title="Focus areas" items={report.improvements} />
         </div>

@@ -22,7 +22,7 @@ export default async function EditExperiencePage({
   if (!currentUser || currentUser.id !== experience.authorId) notFound();
 
   return (
-    <div className="container mx-auto mt-8 mb-32 max-w-6xl space-y-6 px-6">
+    <div className="container mx-auto mt-4 mb-12 max-w-6xl space-y-6 px-4 sm:mt-8 sm:px-6 md:mb-32">
       <ExperiencesBackLink />
       <ExperienceForm
         experienceId={id}

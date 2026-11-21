@@ -107,7 +107,7 @@ export default function NewQuizEventPage() {
   }
 
   return (
-    <div className="container mx-auto mt-8 mb-32 max-w-6xl px-6">
+    <div className="container mx-auto mt-4 mb-12 max-w-6xl px-4 sm:mt-8 sm:px-6 md:mb-32">
       <div className="mx-auto max-w-xl space-y-6">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" asChild>

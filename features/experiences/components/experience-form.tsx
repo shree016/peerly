@@ -280,7 +280,7 @@ export function ExperienceForm({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex items-start gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
             <div className="space-y-1.5">
               <Label>
                 Logo{" "}
@@ -294,7 +294,7 @@ export function ExperienceForm({
                 disabled={isSubmitting}
               />
             </div>
-            <div className="grid min-w-0 flex-1 grid-cols-2 gap-3">
+            <div className="grid w-full min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="companyName">Company</Label>
                 <Input
@@ -318,7 +318,7 @@ export function ExperienceForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="space-y-1.5">
               <Label>Batch</Label>
               <BatchCombobox
@@ -416,7 +416,7 @@ export function ExperienceForm({
           </div>
 
           <div className="space-y-4 rounded-lg border p-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                   Rounds &amp; Stages
@@ -458,7 +458,7 @@ export function ExperienceForm({
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <Label>Stage</Label>
                       <Select
@@ -543,7 +543,7 @@ export function ExperienceForm({
           </div>
 
           <div className="space-y-4 rounded-lg border p-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-2">
                 <Paperclip className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
                 <div>

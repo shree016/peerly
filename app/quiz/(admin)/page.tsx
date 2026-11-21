@@ -20,7 +20,7 @@ export default async function QuizDashboardPage() {
   }
 
   return (
-    <div className="container mx-auto mt-6 mb-32 max-w-6xl space-y-8 px-4 sm:mt-8 sm:px-6">
+    <div className="container mx-auto mt-6 mb-12 md:mb-32 max-w-6xl space-y-8 px-4 sm:mt-8 sm:px-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-serif text-2xl font-bold tracking-tight">Quiz Dashboard</h1>
@@ -38,7 +38,7 @@ export default async function QuizDashboardPage() {
           href="/quiz/events/new"
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {eventList.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}

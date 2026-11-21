@@ -51,10 +51,10 @@ export default async function LandingPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="grid items-center gap-8 pt-6 sm:pt-10 md:grid-cols-2 md:gap-12 md:pt-16">
-        <HeroIllustration className="order-1 w-full md:order-2" />
+      <section className="grid grid-cols-1 items-center gap-8 pt-6 sm:pt-10 md:grid-cols-2 md:gap-12 md:pt-16">
+        <HeroIllustration className="order-2 mx-auto w-full max-w-sm md:max-w-none" />
 
-        <div className="order-2 flex flex-col items-center text-center md:order-1 md:items-start md:text-left">
+        <div className="order-1 flex flex-col items-center text-center md:order-1 md:items-start md:text-left">
           <span className="peeerly-chip bg-sun-soft text-foreground mb-4 border border-sun/50">
             <Sparkles className="size-3.5" /> Built by students, for students
           </span>
@@ -96,7 +96,7 @@ export default async function LandingPage() {
         <div className="mb-5 flex items-end justify-between">
           <h2 className="text-2xl font-bold sm:text-3xl">What&apos;s inside</h2>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Link
             href="/quiz/join"
             className="peeerly-press group relative overflow-hidden rounded-[2rem] bg-linear-to-br from-sky to-primary p-6 text-white shadow-lg sm:p-8"
@@ -165,7 +165,7 @@ export default async function LandingPage() {
       {/* ── How it works ─────────────────────────────────────────────── */}
       <section className="mt-16">
         <h2 className="mb-5 text-2xl font-bold sm:text-3xl">How Peeerly works</h2>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {steps.map((step, i) => (
             <div key={step.title} className="peeerly-card p-6">
               <div className="flex items-center gap-3">

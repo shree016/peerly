@@ -66,7 +66,7 @@ export default async function QuizEventPage({ params }: PageProps) {
   const latestEndedSessionId = endedSessions[0]?.id ?? null;
 
   return (
-    <div className="container mx-auto mt-6 mb-32 max-w-6xl space-y-6 px-4 sm:mt-8 sm:px-6">
+    <div className="container mx-auto mt-6 mb-12 md:mb-32 max-w-6xl space-y-6 px-4 sm:mt-8 sm:px-6">
       <div className="flex items-center gap-3">
         <Button variant="outline" size="sm" asChild>
           <Link href="/quiz">
@@ -82,12 +82,12 @@ export default async function QuizEventPage({ params }: PageProps) {
       </div>
 
       <div className="overflow-hidden rounded-2xl shadow-sm" style={{ background: gradient }}>
-        <div className="flex items-start justify-between gap-4 px-6 py-7 text-white sm:px-8">
-          <div className="flex min-w-0 items-start gap-4">
-            <QuizBrandLogo logoUrl={event.logo_url} size="xl" framed />
+        <div className="flex flex-col gap-5 px-5 py-6 text-white sm:px-8 sm:py-7 md:flex-row md:items-start md:justify-between md:gap-4">
+          <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+            <QuizBrandLogo logoUrl={event.logo_url} size="xl" framed className="shrink-0" />
             <div className="min-w-0">
-              <div className="mb-1.5 flex flex-wrap items-center gap-3">
-                <h1 className="font-serif truncate text-2xl font-bold tracking-wide drop-shadow-sm sm:text-3xl">
+              <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <h1 className="font-serif text-2xl font-bold tracking-wide break-words drop-shadow-sm sm:text-3xl">
                   {event.title}
                 </h1>
                 <StatusBadge status={event.status} />
@@ -99,7 +99,7 @@ export default async function QuizEventPage({ params }: PageProps) {
               )}
             </div>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 md:justify-end">
             <Button
               size="sm"
               className="site-theme bg-white/95 text-foreground dark:text-background hover:bg-white"

@@ -26,7 +26,7 @@ export default async function ExperienceResourcesPage({
   if (!experience) notFound();
 
   return (
-    <div className="container mx-auto mt-8 mb-32 max-w-3xl space-y-6 px-6">
+    <div className="container mx-auto mt-4 mb-12 max-w-3xl space-y-6 px-4 sm:mt-8 sm:px-6 md:mb-32">
       <ExperiencesBackLink />
 
       <div className="flex items-center gap-3">

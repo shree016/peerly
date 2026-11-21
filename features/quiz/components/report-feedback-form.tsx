@@ -218,7 +218,7 @@ export function ReportFeedbackDialog({
         type="button"
         variant="outline"
         size="sm"
-        className="shrink-0 rounded-xl border border-primary bg-primary/10 px-6 py-3 text-center text-sm font-bold text-primary hover:bg-primary/15 transition"
+        className="shrink-0 rounded-xl border border-primary bg-primary/10 px-3 py-3 text-center text-sm font-bold text-primary hover:bg-primary/15 transition sm:px-6"
         disabled={loading}
         onClick={() => setOpen(true)}
       >
@@ -227,7 +227,11 @@ export function ReportFeedbackDialog({
         ) : (
           <>
             <MessageSquareText className="mr-1.5 h-4 w-4" />
-            {submitted ? "Feedback sent" : "Give feedback"}
+            {/* Shortened on phones so the report header title keeps room. */}
+            <span className="sm:hidden">{submitted ? "Sent" : "Feedback"}</span>
+            <span className="hidden sm:inline">
+              {submitted ? "Feedback sent" : "Give feedback"}
+            </span>
           </>
         )}
       </Button>

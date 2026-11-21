@@ -70,19 +70,19 @@ export default async function ExperienceDetailPage({
   const clearedCount = outcomes.filter((o) => o === "Cleared").length;
 
   return (
-    <div className="container mx-auto mt-8 mb-32 max-w-5xl space-y-8 px-6">
+    <div className="container mx-auto mt-4 mb-12 max-w-5xl space-y-8 px-4 sm:mt-8 sm:px-6 md:mb-32">
       <ExperiencesBackLink />
 
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3 sm:gap-4">
           <CompanyAvatar
             companyName={experience.companyName}
             logoUrl={experience.companyLogoUrl}
-            size="h-14 w-14 rounded-2xl text-xl"
+            size="h-12 w-12 rounded-2xl text-lg sm:h-14 sm:w-14 sm:text-xl"
           />
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-serif text-3xl font-normal">
+              <h1 className="font-serif text-2xl font-normal break-words sm:text-3xl">
                 {experience.companyName}
               </h1>
               <Badge className={resultColor[experience.result] ?? ""}>
@@ -114,7 +114,7 @@ export default async function ExperienceDetailPage({
         </div>
         {/* Verified sits top-right, in green, so it reads as an endorsement of
             the whole writeup rather than another inline tag next to the title. */}
-        <div className="flex shrink-0 flex-col items-end gap-2">
+        <div className="flex shrink-0 flex-row flex-wrap items-center gap-2 sm:flex-col sm:items-end">
           {experience.isVerified && (
             <Badge className="gap-1 bg-emerald-600 text-white hover:bg-emerald-600">
               <BadgeCheck className="h-3.5 w-3.5" />
@@ -168,7 +168,7 @@ export default async function ExperienceDetailPage({
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>

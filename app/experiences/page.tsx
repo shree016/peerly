@@ -79,7 +79,7 @@ export default async function ExperiencesPage({
         {statTiles.map((tile, i) => (
           <div
             key={tile.label}
-            className={`${tileTones[i]} min-w-[8.5rem] shrink-0 rounded-3xl border p-4`}
+            className={`${tileTones[i]} min-w-[8.5rem] shrink-0 rounded-3xl border p-4 sm:min-w-0 sm:p-3 lg:p-4`}
           >
             <span className="text-xl">{tile.emoji}</span>
             <div className="font-serif text-2xl font-bold">{tile.value}</div>

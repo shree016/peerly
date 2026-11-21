@@ -50,7 +50,7 @@ export function SessionControlBar({
             ) : (
               <>
                 <Square className="h-3.5 w-3.5 fill-current" />
-                End Session
+                End<span className="hidden sm:inline"> Session</span>
               </>
             )}
           </Button>

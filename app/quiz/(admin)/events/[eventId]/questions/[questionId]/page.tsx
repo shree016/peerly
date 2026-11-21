@@ -210,7 +210,7 @@ export default function EditQuestionPage() {
 
   if (fetching) {
     return (
-      <div className="p-6 sm:p-8 max-w-6xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
         <div className="mb-6">
           <Link
             href={`/quiz/events/${eventId}`}
@@ -227,7 +227,7 @@ export default function EditQuestionPage() {
 
   if (fetchError) {
     return (
-      <div className="p-6 sm:p-8 max-w-6xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
         <div className="mb-6">
           <Link
             href={`/quiz/events/${eventId}`}
@@ -248,7 +248,7 @@ export default function EditQuestionPage() {
   }
 
   return (
-    <div className="p-6 sm:p-8 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       {/* Back link */}
       <div className="mb-6">
         <Link

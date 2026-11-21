@@ -119,7 +119,7 @@ export default async function DashboardPage() {
         </Link>
       </header>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
         <div className="space-y-4">
           {/* ── Hero: join a quiz ──────────────────────────────────────── */}
           <section className="relative overflow-hidden rounded-[2rem] border-2 border-white/80 bg-linear-to-br from-sky-soft to-sky p-5 shadow-lg sm:p-7 dark:border-white/5">

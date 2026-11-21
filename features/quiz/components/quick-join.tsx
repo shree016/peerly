@@ -70,7 +70,7 @@ export function QuickJoin({ className }: { className?: string }) {
         autoCapitalize="characters"
         spellCheck={false}
         placeholder="Join code"
-        className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent px-4 font-mono text-base font-bold tracking-[0.2em] uppercase outline-none placeholder:font-sans placeholder:font-medium placeholder:tracking-normal"
+        className="placeholder:text-muted-foreground w-0 min-w-0 flex-1 bg-transparent px-4 font-mono text-base font-bold tracking-[0.2em] uppercase outline-none placeholder:font-sans placeholder:font-medium placeholder:tracking-normal"
         disabled={loading}
       />
       <button

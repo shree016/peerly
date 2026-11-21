@@ -139,7 +139,7 @@ export default function JoinNamePage() {
 
   if (lookupError) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4 py-8">
+      <div className="flex items-start justify-center bg-background px-4 pt-8 pb-12 sm:min-h-[calc(100dvh-14rem)] sm:items-center sm:py-12">
         <div className="w-full max-w-sm text-center space-y-6">
           <div className="text-5xl" aria-hidden="true">😕</div>
           <div>
@@ -158,7 +158,7 @@ export default function JoinNamePage() {
   }
 
   return (
-    <div className="min-h-[100dvh] flex items-start sm:items-center justify-center bg-background px-3 sm:px-4 py-6 sm:py-8">
+    <div className="flex items-start justify-center bg-background px-4 pt-6 pb-12 sm:min-h-[calc(100dvh-14rem)] sm:items-center sm:py-12">
       <div className="w-full max-w-md space-y-6 sm:space-y-8">
         <div className="text-center">
           <QuizEventBrand

@@ -541,7 +541,7 @@ export default function PlayPage() {
 
   if (loadError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="min-h-dvh flex items-center justify-center bg-background px-4">
         <div className="text-center space-y-4">
           <div className="text-4xl" aria-hidden="true">⚠️</div>
           <h1 className="text-xl font-bold">Something went wrong</h1>
@@ -569,7 +569,7 @@ export default function PlayPage() {
     return (
       <>
         <QuizFullscreenGuard active={focusEnforcementActive} state={fullscreen} />
-        <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="min-h-dvh flex items-center justify-center bg-background">
           {reconnectionBanner}
           <CountdownView />
         </div>
@@ -738,7 +738,7 @@ function LobbyWaitingView({
   const previewAvatar = draftAvatar ?? DEFAULT_QUIZ_AVATAR
 
   return (
-    <div className="min-h-screen bg-background px-3 py-6 sm:px-4 sm:py-8">
+    <div className="min-h-dvh bg-background px-3 py-6 sm:px-4 sm:py-8">
       <div className="mx-auto w-full max-w-md space-y-6">
         <QuizEventBrand
           title={sessionTitle}
@@ -904,19 +904,19 @@ function QuestionView({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Timer bar — sticks below the floating navbar while scrolling */}
-      <div className="sticky top-[4.25rem] sm:top-[4.75rem] z-30 h-2 shrink-0 bg-muted">
+    <div className="min-h-dvh flex flex-col bg-background">
+      {/* Timer bar — play is an immersive route (no navbar), so it pins to the very top */}
+      <div className="sticky top-0 z-30 h-2 shrink-0 bg-muted">
         <div className={`h-full transition-all duration-200 ${remaining < 5 ? "bg-destructive" : "bg-primary"}`} style={{ width: `${pct}%` }} />
       </div>
-      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 py-6 space-y-5">
+      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-4 sm:py-6 sm:space-y-5">
         {totalQuestions > 0 && (
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">
             Question {questionNumber} of {totalQuestions}
           </p>
         )}
-        <div className="flex justify-between items-center text-sm text-muted-foreground">
-          <span>{Math.ceil(remaining)}s</span>
+        <div className="flex flex-wrap justify-between items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+          <span className={`tabular-nums font-semibold ${remaining < 5 ? "text-destructive" : "text-foreground"}`}>{Math.ceil(remaining)}s</span>
           <span aria-live="polite">
             <span className="font-semibold text-foreground">{answeredCount}</span>
             {" / "}
@@ -928,7 +928,7 @@ function QuestionView({
           <img src={question.imageUrl} alt="Question image" className="w-full rounded-xl object-cover max-h-48" />
         )}
         <div className="rounded-xl border bg-card px-5 py-4">
-          <p className="text-lg font-semibold leading-snug">{question.text}</p>
+          <p className="text-lg font-semibold leading-snug break-words sm:text-xl">{question.text}</p>
         </div>
         {submitted ? (
           <div className="rounded-xl border bg-muted px-6 py-5 text-center" role="status">
@@ -943,7 +943,7 @@ function QuestionView({
                 return (
                   <button key={option.id} onClick={() => handleOptionClick(option.id)}
                     disabled={interactionLocked || submitted || (timedOut && !isMultiSelect)}
-                    className={`min-h-[44px] rounded-xl border px-4 py-3 text-left text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition disabled:cursor-not-allowed ${isSelected ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:bg-muted border-border"}`}
+                    className={`min-h-[52px] rounded-xl border px-4 py-3.5 text-left text-base font-medium break-words active:scale-[0.99] sm:min-h-[44px] sm:py-3 sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition disabled:cursor-not-allowed ${isSelected ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:bg-muted border-border"}`}
                     aria-pressed={isSelected}>
                     {option.imageUrl && <img src={option.imageUrl} alt="" className="w-full rounded-lg mb-2 object-cover max-h-24" aria-hidden="true" />}
                     {option.text}
@@ -977,7 +977,7 @@ function ResultFeedbackView({
   const noAnswer = isCorrect === null && scoreAwarded === 0 && submittedOptionIds.length === 0
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 space-y-6">
+    <div className="min-h-dvh flex flex-col items-center justify-center bg-background px-4 py-8 space-y-6">
       {/* Correct/incorrect indicator */}
       <div className={`text-7xl ${isCorrect === true ? "animate-bounce" : ""}`} aria-hidden="true">
         {noAnswer ? "⏱️" : isCorrect === true ? "✅" : isCorrect === false ? "❌" : "📊"}
@@ -1001,7 +1001,7 @@ function ResultFeedbackView({
             const isCorrectOpt = resultsData.correctOptionIds.includes(opt.id)
             const wasSelected = submittedOptionIds.includes(opt.id)
             return (
-              <div key={opt.id} className={`rounded-lg border px-3 py-2 text-sm flex items-center gap-2 ${isCorrectOpt ? "border-green-500 bg-green-50 text-green-800" : wasSelected ? "border-destructive bg-red-50 text-destructive" : "bg-card"}`}>
+              <div key={opt.id} className={`rounded-lg border px-3 py-2 text-sm flex items-start gap-2 break-words ${isCorrectOpt ? "border-green-500 bg-green-50 text-green-800" : wasSelected ? "border-destructive bg-red-50 text-destructive" : "bg-card"}`}>
                 {isCorrectOpt ? "✓" : wasSelected ? "✗" : "○"}
                 <span>{opt.text}</span>
               </div>
@@ -1028,7 +1028,7 @@ function EndView({
   totalScore: number
 }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 space-y-8">
+    <div className="min-h-dvh flex flex-col items-center justify-center bg-background px-4 py-8 space-y-8">
       <QuizAvatar emoji={avatar || DEFAULT_QUIZ_AVATAR} size="hero" className="mx-auto" />
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-black">Thanks for playing!</h1>
