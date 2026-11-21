@@ -27,7 +27,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { createExperience, updateExperience } from "../lib/actions";
-import { ExperienceFormInitialData } from "../lib/experience-form-input";
+import {
+  ExperienceFormInitialData,
+  documentTypeFromFileName,
+} from "../lib/experience-form-input";
+import { ExperienceTemplate } from "../lib/types";
 import {
   ExperienceRoundInput,
   ResourceInput,
@@ -45,6 +49,7 @@ import { BatchCombobox } from "./batch-combobox";
 import { DocumentUpload, UploadedDocument } from "./document-upload";
 import { LogoUpload } from "./logo-upload";
 import { roundOutcomeMeta } from "./round-outcome";
+import { TemplatePicker } from "./template-picker";
 
 function emptyRound(roundNumber: number): ExperienceRoundInput {
   return {
@@ -109,12 +114,33 @@ function RoundOutcomePicker({
   );
 }
 
+function templateJd(template: ExperienceTemplate): UploadedDocument | null {
+  if (!template.jd) return null;
+  return {
+    url: template.jd.url,
+    type: documentTypeFromFileName(template.jd.fileName),
+    fileName: template.jd.fileName,
+    fileSize: 0,
+  };
+}
+
+function templateRounds(template: ExperienceTemplate): ExperienceRoundInput[] {
+  if (template.rounds.length === 0) return [emptyRound(1)];
+  return template.rounds.map((round, index) => ({
+    ...emptyRound(index + 1),
+    roundType: round.roundType,
+    difficulty: round.difficulty,
+  }));
+}
+
 export function ExperienceForm({
   experienceId,
   initialData,
+  templates = [],
 }: {
   experienceId?: string;
   initialData?: ExperienceFormInitialData;
+  templates?: ExperienceTemplate[];
 }) {
   const router = useRouter();
   const isEditing = Boolean(experienceId);
@@ -144,6 +170,42 @@ export function ExperienceForm({
       document: resource.document,
     })) ?? [],
   );
+
+  const [templateKey, setTemplateKey] = useState<string | null>(null);
+
+  // Round descriptions are the one part of the round list that is the
+  // author's own writing, so a template only replaces rounds nobody has
+  // started describing yet.
+  const roundsUntouched = rounds.every((r) => !r.description.trim());
+
+  function applyTemplate(template: ExperienceTemplate) {
+    setTemplateKey(template.key);
+    setCompanyName(template.companyName);
+    setCompanyLogoUrl(template.companyLogoUrl);
+    setRole(template.role);
+    setBatch(template.batch);
+    setCtcLpa(template.ctcLpa != null ? String(template.ctcLpa) : "");
+    setJd(templateJd(template));
+    if (roundsUntouched) {
+      setRounds(templateRounds(template));
+      toast.success(`Filled in ${template.companyName}'s drive details.`);
+    } else {
+      toast.success(
+        `Filled in ${template.companyName}'s drive details — your rounds were kept.`,
+      );
+    }
+  }
+
+  function clearTemplate() {
+    setTemplateKey(null);
+    setCompanyName("");
+    setCompanyLogoUrl(null);
+    setRole("");
+    setBatch("");
+    setCtcLpa("");
+    setJd(null);
+    if (roundsUntouched) setRounds([emptyRound(1)]);
+  }
 
   function updateRound(index: number, patch: Partial<ExperienceRoundInput>) {
     setRounds((prev) =>
@@ -280,6 +342,16 @@ export function ExperienceForm({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {!isEditing && templates.length > 0 && (
+            <TemplatePicker
+              templates={templates}
+              selectedKey={templateKey}
+              onSelect={applyTemplate}
+              onClear={clearTemplate}
+              disabled={isSubmitting}
+            />
+          )}
+
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
             <div className="space-y-1.5">
               <Label>

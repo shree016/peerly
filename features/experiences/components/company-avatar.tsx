@@ -17,12 +17,19 @@ export function CompanyAvatar({
   logoUrl,
   size,
   className = "",
+  imageClassName = "p-1",
 }: {
   companyName: string;
   logoUrl?: string | null;
   /** Tailwind size classes, e.g. "h-11 w-11". Rounding comes from `rounded`. */
   size: string;
   className?: string;
+  /**
+   * Padding around the logo image. Circular tiles need more (~15%) so a
+   * square logo sits fully inside the circle instead of having its corners
+   * clipped.
+   */
+  imageClassName?: string;
 }) {
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -37,7 +44,7 @@ export function CompanyAvatar({
           fill
           sizes="96px"
           unoptimized
-          className="object-contain p-1"
+          className={`object-contain ${imageClassName}`}
           onError={() => setImageFailed(true)}
         />
       </div>

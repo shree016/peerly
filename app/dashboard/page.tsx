@@ -232,6 +232,7 @@ export default async function DashboardPage() {
                           companyName={exp.companyName}
                           logoUrl={exp.companyLogoUrl}
                           size="size-11 rounded-full text-base"
+                          imageClassName="p-[15%]"
                         />
                       }
                       name={exp.companyName}
@@ -270,7 +271,8 @@ export default async function DashboardPage() {
                     <CompanyAvatar
                       companyName={c.name}
                       logoUrl={c.logoUrl}
-                      size="size-full text-2xl"
+                      size="size-full rounded-full text-2xl"
+                      imageClassName="p-[15%]"
                     />
                   ),
                   value: <>📝 {c.count}</>,
@@ -290,6 +292,7 @@ export default async function DashboardPage() {
                           companyName={c.name}
                           logoUrl={c.logoUrl}
                           size="size-11 rounded-full text-base"
+                          imageClassName="p-[15%]"
                         />
                       }
                       name={c.name}

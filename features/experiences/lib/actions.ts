@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { asc, count, desc, eq, sql } from "drizzle-orm";
+import { asc, count, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 import { sendEmail } from "@/lib/email";
 import {
@@ -24,17 +24,23 @@ import {
 import {
   CommentWithAuthor,
   ExperienceListItem,
+  ExperienceTemplate,
   ExperienceWithAuthor,
 } from "./types";
 import {
   CreateExperienceInput,
   PostCommentInput,
   RoundOutcome,
+  RoundType,
   UpdateExperienceInput,
+  difficultyOptions,
   roundOutcomeOptions,
+  roundTypeOptions,
 } from "./validation";
 
 const knownOutcomes = new Set<string>(roundOutcomeOptions);
+const knownRoundTypes = new Set<string>(roundTypeOptions);
+const knownDifficulties = new Set<string>(difficultyOptions);
 
 /** Legacy rounds predate the outcome column, so anything unknown reads as null. */
 function normalizeOutcome(value: string | null): RoundOutcome | null {
@@ -93,6 +99,41 @@ export async function createExperience(data: CreateExperienceInput) {
   return experience;
 }
 
+/**
+ * Templates let several writeups point at the same uploaded logo or JD, so an
+ * upload is only safe to delete once no experience references it any more.
+ * Callers must run this after their own row changes are written.
+ */
+async function findReferencedUploadUrls(urls: string[]) {
+  if (urls.length === 0) return new Set<string>();
+
+  const [experienceRefs, resourceRefs] = await Promise.all([
+    db
+      .select({
+        jdUrl: interviewExperience.jdUrl,
+        companyLogoUrl: interviewExperience.companyLogoUrl,
+      })
+      .from(interviewExperience)
+      .where(
+        or(
+          inArray(interviewExperience.jdUrl, urls),
+          inArray(interviewExperience.companyLogoUrl, urls),
+        ),
+      ),
+    db
+      .select({ content: interviewExperienceResource.content })
+      .from(interviewExperienceResource)
+      .where(inArray(interviewExperienceResource.content, urls)),
+  ]);
+
+  return new Set(
+    [
+      ...experienceRefs.flatMap((r) => [r.jdUrl, r.companyLogoUrl]),
+      ...resourceRefs.map((r) => r.content),
+    ].filter((url): url is string => Boolean(url)),
+  );
+}
+
 async function deleteRemovedExperienceUploads(
   previousUrls: string[],
   nextUrls: string[],
@@ -100,7 +141,13 @@ async function deleteRemovedExperienceUploads(
   if (!isS3Configured()) return;
 
   const nextSet = new Set(nextUrls.filter(Boolean));
-  const removed = previousUrls.filter((url) => url && !nextSet.has(url));
+  const candidates = [
+    ...new Set(previousUrls.filter((url) => url && !nextSet.has(url))),
+  ];
+  if (candidates.length === 0) return;
+
+  const stillReferenced = await findReferencedUploadUrls(candidates);
+  const removed = candidates.filter((url) => !stillReferenced.has(url));
 
   if (removed.length === 0) return;
 
@@ -353,20 +400,95 @@ export async function deleteExperience(id: string) {
     ...experience.resources.map((r) => r.content),
   ].filter((url): url is string => Boolean(url));
 
-  if (uploadedUrls.length > 0 && isS3Configured()) {
-    await Promise.all(
-      uploadedUrls.map(async (url) => {
-        if (!experienceUploadKeyFromUrl(url)) return;
-        try {
-          await deleteS3ObjectByUrl(url);
-        } catch (error) {
-          console.error("Failed to delete experience upload from S3:", error);
-        }
-      }),
-    );
-  }
+  await deleteRemovedExperienceUploads(uploadedUrls, []);
 
   revalidatePath("/experiences");
+}
+
+/**
+ * One template per company + role + batch drive, built from what earlier
+ * writeups already recorded. Only drive-level facts are carried over — never
+ * another person's result, overview or questions.
+ */
+export async function getExperienceTemplates(): Promise<ExperienceTemplate[]> {
+  const currentUser = await getUser();
+  if (!currentUser) throw new Error("Unauthorized");
+
+  const rows = await db.query.interviewExperience.findMany({
+    where: eq(interviewExperience.isPublished, true),
+    orderBy: (e) => [desc(e.createdAt)],
+    columns: {
+      id: true,
+      companyName: true,
+      companyLogoUrl: true,
+      role: true,
+      batch: true,
+      ctcLpa: true,
+      jdUrl: true,
+      jdFileName: true,
+      createdAt: true,
+    },
+    with: {
+      rounds: {
+        orderBy: (r) => [asc(r.roundNumber)],
+        columns: { roundType: true, difficulty: true },
+      },
+    },
+  });
+
+  const templates = new Map<string, ExperienceTemplate>();
+
+  // Rows arrive newest first, so the first non-empty value seen for a field is
+  // the most recent one anyone recorded for that drive.
+  for (const row of rows) {
+    const key = [row.companyName, row.role, row.batch]
+      .map((part) => part.trim().toLowerCase())
+      .join("|");
+
+    const rounds = row.rounds
+      .filter((r) => knownRoundTypes.has(r.roundType))
+      .map((r) => ({
+        roundType: r.roundType as RoundType,
+        difficulty:
+          r.difficulty && knownDifficulties.has(r.difficulty)
+            ? (r.difficulty as ExperienceTemplate["rounds"][number]["difficulty"])
+            : undefined,
+      }));
+
+    const existing = templates.get(key);
+    if (!existing) {
+      templates.set(key, {
+        key,
+        companyName: row.companyName.trim(),
+        companyLogoUrl: row.companyLogoUrl,
+        role: row.role.trim(),
+        batch: row.batch.trim(),
+        ctcLpa: row.ctcLpa,
+        jd: row.jdUrl
+          ? { url: row.jdUrl, fileName: row.jdFileName ?? "Job description" }
+          : null,
+        rounds,
+        postCount: 1,
+        lastSharedAt: row.createdAt,
+      });
+      continue;
+    }
+
+    existing.postCount += 1;
+    existing.companyLogoUrl ??= row.companyLogoUrl;
+    existing.ctcLpa ??= row.ctcLpa;
+    if (!existing.jd && row.jdUrl) {
+      existing.jd = {
+        url: row.jdUrl,
+        fileName: row.jdFileName ?? "Job description",
+      };
+    }
+    // Someone rejected early only saw part of the process; the longest round
+    // list is the closest to the drive's full structure.
+    if (rounds.length > existing.rounds.length) existing.rounds = rounds;
+  }
+
+  return [...templates.values()];
 }
 
 export async function getComments(

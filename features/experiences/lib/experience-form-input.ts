@@ -22,7 +22,7 @@ export type ExperienceFormInitialData = {
   resources: { title: string; document: UploadedDocument }[];
 };
 
-function documentTypeFromFileName(fileName: string | null): DocumentType {
+export function documentTypeFromFileName(fileName: string | null): DocumentType {
   return fileName?.toLowerCase().endsWith(".docx") ? "docx" : "pdf";
 }
 

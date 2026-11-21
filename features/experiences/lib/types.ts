@@ -6,7 +6,7 @@ import {
   User,
 } from "@/types";
 
-import { RoundOutcome } from "./validation";
+import { RoundOutcome, RoundType, difficultyOptions } from "./validation";
 
 export type ExperienceWithAuthor = InterviewExperience & {
   author: Pick<User, "id" | "name" | "image">;
@@ -26,4 +26,21 @@ export type ExperienceListItem = InterviewExperience & {
   roundOutcomes: (RoundOutcome | null)[];
   resourceCount: number;
   commentCount: number;
+};
+
+/** Drive-level details reusable by anyone else writing up the same drive. */
+export type ExperienceTemplate = {
+  key: string;
+  companyName: string;
+  companyLogoUrl: string | null;
+  role: string;
+  batch: string;
+  ctcLpa: number | null;
+  jd: { url: string; fileName: string } | null;
+  rounds: {
+    roundType: RoundType;
+    difficulty: (typeof difficultyOptions)[number] | undefined;
+  }[];
+  postCount: number;
+  lastSharedAt: Date;
 };
