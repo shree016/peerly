@@ -4,6 +4,9 @@ import { generateQuizQuestionsWithAi } from "@/features/quiz/lib/actions";
 import { isQuizApiError, quizErrorBody } from "@/features/quiz/lib/auth";
 import { generateQuestionsSchema } from "@/features/quiz/lib/validation";
 
+// Grounded generation makes several sequential OpenAI calls (batches of 5).
+export const maxDuration = 60;
+
 type RouteContext = { params: Promise<{ eventId: string }> };
 
 export async function POST(request: NextRequest, { params }: RouteContext) {
