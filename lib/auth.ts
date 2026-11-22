@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import { buildVerificationEmailHtml, sendEmail } from "@/lib/email";
 
 import db from "@/db";
-import { user as userTable } from "@/db/schema";
+import { session as sessionTable, user as userTable } from "@/db/schema";
 import { EMAIL_POLICY_ERROR_CODE, isAllowedEmail } from "@/lib/email-policy";
 import { isSuperAdminEmail } from "@/lib/permissions/owners";
 import { DEFAULT_ROLE, ac, roles } from "@/lib/permissions/roles";
@@ -26,13 +26,24 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    // No session until the inbox is proven. This also makes sign-up answer the
+    // same way for new and taken emails.
+    requireEmailVerification: true,
   },
   emailVerification: {
+    sendOnSignUp: true,
+    // Only reached with the correct password, so it doubles as "resend".
+    sendOnSignIn: true,
+    // Sessions from before the inbox was proven may belong to someone else,
+    // and must not come alive when the real owner clicks the link.
+    beforeEmailVerification: async (user) => {
+      await db.delete(sessionTable).where(eq(sessionTable.userId, user.id));
+    },
     sendVerificationEmail: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
         subject: "Verify your email address",
-        text: `Hi${user.name ? ` ${user.name}` : ""},\n\nClick the link below to verify your email address:\n${url}`,
+        text: `Hi${user.name ? ` ${user.name}` : ""},\n\nClick the link below to verify your email address:\n${url}\n\nIf you didn't sign up for Peeerly, don't open the link.`,
         html: buildVerificationEmailHtml({ name: user.name, url }),
       });
     },
@@ -59,25 +70,19 @@ export const auth = betterAuth({
       if (ctx.path === "/sign-up/email" || ctx.path === "/sign-in/email") {
         rejectDisallowedEmail(ctx.body?.email as string | undefined);
       }
-      // A password sign-up proves nothing about who owns the inbox, so owner
-      // accounts can only be created with Google. The error is the same as
-      // for a taken email, so it doesn't reveal which addresses are owners.
-      if (
-        ctx.path === "/sign-up/email" &&
-        isSuperAdminEmail(ctx.body?.email as string | undefined)
-      ) {
-        throw APIError.from(
-          "UNPROCESSABLE_ENTITY",
-          BASE_ERROR_CODES.USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL,
-        );
-      }
     }),
   },
   databaseHooks: {
     user: {
       create: {
-        before: async (user) => {
+        before: async (user, ctx) => {
           rejectDisallowedEmail(user.email);
+          // Whoever signs up picks the password, so owner accounts can only be
+          // created with Google. Better Auth turns a 403 from this hook into
+          // its normal sign-up response, so owner addresses aren't revealed.
+          if (ctx?.path === "/sign-up/email" && isSuperAdminEmail(user.email)) {
+            throw new APIError("FORBIDDEN");
+          }
           return { data: user };
         },
         after: async (user) => {
@@ -100,9 +105,16 @@ export const auth = betterAuth({
         before: async (session) => {
           const account = await db.query.user.findFirst({
             where: eq(userTable.id, session.userId),
-            columns: { email: true },
+            columns: { email: true, emailVerified: true },
           });
           rejectDisallowedEmail(account?.email);
+          // Covers every other way of getting a session, such as OAuth.
+          if (!account?.emailVerified) {
+            throw APIError.from(
+              "FORBIDDEN",
+              BASE_ERROR_CODES.EMAIL_NOT_VERIFIED,
+            );
+          }
           return { data: session };
         },
         after: async (session) => {

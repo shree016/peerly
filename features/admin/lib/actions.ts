@@ -59,16 +59,17 @@ export async function listUsersForAdmin(
     await requirePermission("access:manage-roles");
     const { query, role, page } = listUsersSchema.parse(input);
 
-    const filters = [];
+    // A pending sign-up is only a claim on an address, not a user yet.
+    const filters = [eq(user.emailVerified, true)];
     if (query) {
       filters.push(
-        or(ilike(user.name, `%${query}%`), ilike(user.email, `%${query}%`)),
+        or(ilike(user.name, `%${query}%`), ilike(user.email, `%${query}%`))!,
       );
     }
     if (role && role !== "student") {
       filters.push(like(user.role, `%${role}%`));
     }
-    const where = filters.length ? and(...filters) : undefined;
+    const where = and(...filters);
 
     const [rows, [{ total }]] = await Promise.all([
       db

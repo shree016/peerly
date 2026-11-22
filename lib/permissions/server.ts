@@ -6,7 +6,7 @@ import { getUser } from "@/actions/user";
 
 import type { User } from "@/types";
 
-import { isSuperAdminEmail, isVerifiedOwner } from "./owners";
+import { isVerifiedOwner } from "./owners";
 import {
   type Permission,
   ROLE_NAMES,
@@ -22,11 +22,11 @@ type RoleSource = Pick<User, "role" | "email" | "emailVerified">;
  * the very first admin gets access, and it guarantees peerly can never be
  * left without anyone able to manage roles.
  *
- * An unverified account on an owner email may be an impostor, so it gets no
- * elevated role at all, not even one stored in the database.
+ * An unverified account may be an impostor, so it gets no elevated role at
+ * all, not even one stored in the database.
  */
 export function getEffectiveRoles(user: RoleSource): RoleName[] {
-  if (isSuperAdminEmail(user.email) && !user.emailVerified) return ["student"];
+  if (!user.emailVerified) return ["student"];
 
   const stored = parseRoles(user.role);
   if (isVerifiedOwner(user) && !stored.includes("admin")) {

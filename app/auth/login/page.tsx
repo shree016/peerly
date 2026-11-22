@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { signIn, signInSocial } from "@/actions/auth";
 
+import { unwrap } from "@/lib/app-error";
 import { resolveAuthErrorMessage } from "@/lib/auth-errors";
 import { EMAIL_DOMAIN_RESTRICTED, EMAIL_PLACEHOLDER } from "@/lib/email-policy";
 
@@ -48,6 +49,11 @@ const Login = () => {
     searchParams.get("error"),
     searchParams.get("error_description"),
   );
+  const notice = searchParams.has("verified")
+    ? "Link confirmed. Log in to continue."
+    : searchParams.get("verify") === "sent"
+      ? "Check your inbox and spam folder for a verification link, then log in. No email? Log in below: we'll send a new link if your account still needs one."
+      : null;
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -69,7 +75,7 @@ const Login = () => {
     isPending,
     error,
   } = useMutation({
-    mutationFn: signIn,
+    mutationFn: async (values: SignInSchema) => unwrap(await signIn(values)),
     onSuccess: () => {
       // Invalidate user query to update navbar
       queryClient.invalidateQueries({ queryKey: ["user"] });
@@ -104,6 +110,15 @@ const Login = () => {
             {oauthError && (
               <div className="border-destructive/20 bg-destructive/10 rounded-lg border p-4">
                 <p className="text-destructive text-sm">{oauthError}</p>
+              </div>
+            )}
+
+            {notice && !oauthError && !error && (
+              <div
+                role="status"
+                className="border-primary/20 bg-primary/10 rounded-lg border p-4"
+              >
+                <p className="text-sm">{notice}</p>
               </div>
             )}
 

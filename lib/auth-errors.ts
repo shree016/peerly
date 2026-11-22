@@ -9,6 +9,13 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   invalid_code: "Sign-in failed. Please try again.",
   unable_to_create_user: "We could not create your account. Please try again.",
   signup_disabled: "New sign-ups are not allowed for this provider.",
+  token_expired:
+    "That verification link has expired. Log in with your password to get a new one.",
+  invalid_token:
+    "That verification link isn't valid. Log in with your password to get a new one.",
+  account_not_linked:
+    "An account with this email already exists but couldn't be linked to Google. Log in with its password instead.",
+  email_not_verified: "Verify your email before logging in.",
   email_not_found:
     "We could not read an email from your account. Try another sign-in method.",
 };

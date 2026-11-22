@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { useRouter } from "@bprogress/next";
 import { useForm } from "@tanstack/react-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,6 @@ import {
 
 const SignUp = () => {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -71,13 +70,8 @@ const SignUp = () => {
   } = useMutation({
     mutationFn: signUp,
     onSuccess: () => {
-      // Invalidate user query to update navbar
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-      toast.success(
-        "Account created! Please check your inbox to verify your email.",
-        { duration: 5000 },
-      );
-      router.push("/dashboard");
+      // No session yet, and the same response is given for a taken email.
+      router.push("/auth/login?verify=sent");
     },
     onError: (error) => {
       toast.error(error.message || "Something went wrong!");

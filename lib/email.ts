@@ -75,6 +75,9 @@ export function buildVerificationEmailHtml({
       If the button does not work, copy and paste this link into your browser:<br>
       <a href="${url}" style="color: #2563eb; word-break: break-all;">${url}</a>
     </p>
+    <p style="font-size: 14px; color: #6b7280;">
+      If you didn't sign up for Peeerly, don't open the link.
+    </p>
   </body>
 </html>`;
 }

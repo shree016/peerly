@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { isAPIError } from "better-auth/api";
+
+import { AppError, runAction } from "@/lib/app-error";
 import { auth } from "@/lib/auth";
 import { EMAIL_POLICY_ERROR, isAllowedEmail } from "@/lib/email-policy";
 
@@ -12,6 +15,8 @@ import { signInSchema, signUpSchema } from "@/validation/auth";
 import { validateOrThrow } from "@/validation";
 
 import { getUser } from "./user";
+
+const VERIFIED_CALLBACK_URL = "/auth/login?verified=1";
 
 export async function signInSocial(
   provider: "google" | "github",
@@ -37,22 +42,32 @@ export async function signIn({
   email: string;
   password: string;
 }) {
-  validateOrThrow(signInSchema, { email, password });
+  // Returned rather than thrown: production masks thrown messages, and the
+  // person needs to read "verify your email".
+  return runAction(async () => {
+    validateOrThrow(signInSchema, { email, password });
 
-  if (!isAllowedEmail(email)) {
-    throw new Error(EMAIL_POLICY_ERROR);
-  }
+    if (!isAllowedEmail(email)) {
+      throw new AppError("EMAIL_POLICY", EMAIL_POLICY_ERROR, 400);
+    }
 
-  const { user } = await auth.api.signInEmail({
-    body: { email, password },
-    headers: await headers(),
+    try {
+      const { user } = await auth.api.signInEmail({
+        body: { email, password, callbackURL: VERIFIED_CALLBACK_URL },
+        headers: await headers(),
+      });
+      return user;
+    } catch (error) {
+      if (!isAPIError(error) || !error.body?.message) throw error;
+
+      const code = error.body.code ?? "SIGN_IN_FAILED";
+      const message =
+        code === "EMAIL_NOT_VERIFIED"
+          ? "Verify your email before logging in. We've sent a new link, so check your inbox and spam folder."
+          : error.body.message;
+      throw new AppError(code, message, error.statusCode);
+    }
   });
-
-  if (!user) {
-    throw new Error("Failed to sign in");
-  }
-
-  return user;
 }
 
 export async function signUp({
@@ -70,26 +85,16 @@ export async function signUp({
     throw new Error(EMAIL_POLICY_ERROR);
   }
 
+  // Sends the verification link and does not sign the person in. Don't send
+  // another one here: for a taken email it would deliver a link that activates
+  // the password chosen by whoever registered that address first.
   const { user } = await auth.api.signUpEmail({
-    body: { name, email, password },
+    body: { name, email, password, callbackURL: VERIFIED_CALLBACK_URL },
     headers: await headers(),
   });
 
   if (!user) {
     throw new Error("Failed to sign up");
-  }
-
-  try {
-    await auth.api.sendVerificationEmail({
-      body: { email, callbackURL: "/dashboard" },
-      headers: await headers(),
-    });
-  } catch (error) {
-    // The account was already created successfully above, and email
-    // verification isn't required to sign in — a delivery failure here
-    // (e.g. email provider misconfigured) shouldn't surface as a fatal
-    // error and strand the user with a "did my signup even work?" screen.
-    console.error("Failed to send verification email:", error);
   }
 }
 

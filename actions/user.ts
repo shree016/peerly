@@ -30,11 +30,9 @@ const ALLOWED_IMAGE_TYPES = new Set([
 
 export async function uploadProfilePicture(formData: FormData) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const me = await getUser();
 
-    if (!session?.user) {
+    if (!me) {
       return { success: false as const, error: "Unauthorized" };
     }
 
@@ -56,7 +54,7 @@ export async function uploadProfilePicture(formData: FormData) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const url = await uploadProfileImageBuffer({
-      userId: session.user.id,
+      userId: me.id,
       body: buffer,
       contentType: file.type,
       extension: extensionFromFile(file),
@@ -74,6 +72,11 @@ export async function uploadProfilePicture(formData: FormData) {
 }
 
 
+/**
+ * The signed-in user. An unverified email counts as signed out, which also
+ * covers sessions issued before verification was required. Use this rather
+ * than `auth.api.getSession` for every auth check.
+ */
 export async function getUser(): Promise<User | null> {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -87,7 +90,7 @@ export async function getUser(): Promise<User | null> {
     where: eq(user.id, session.user.id),
   });
 
-  if (!userData) {
+  if (!userData?.emailVerified) {
     return null;
   }
 
@@ -106,17 +109,15 @@ export async function updateUserProfile(data: {
   try {
     validateOrThrow(editProfileSchema, data);
 
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const me = await getUser();
 
-    if (!session?.user) {
+    if (!me) {
       return { success: false, error: "Unauthorized" };
     }
 
     // Get current user to check for old image
     const currentUser = await db.query.user.findFirst({
-      where: eq(user.id, session.user.id),
+      where: eq(user.id, me.id),
       columns: { image: true },
     });
 
@@ -128,7 +129,7 @@ export async function updateUserProfile(data: {
       nextImage &&
       normalizeProfileImageUrl(previousImage) !== normalizeProfileImageUrl(nextImage)
     ) {
-      await deleteStoredProfileImage(previousImage, session.user.id);
+      await deleteStoredProfileImage(previousImage, me.id);
     }
 
     // Update user profile
@@ -143,11 +144,11 @@ export async function updateUserProfile(data: {
         linkedin: socialUrl("linkedin", data.linkedin) || null,
         portfolio: data.portfolio?.trim() || null,
       })
-      .where(eq(user.id, session.user.id));
+      .where(eq(user.id, me.id));
 
     // Revalidate relevant paths
     revalidatePath("/dashboard");
-    revalidatePath(`/users/${session.user.id}`);
+    revalidatePath(`/users/${me.id}`);
 
     return { success: true };
   } catch (error) {
