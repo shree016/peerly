@@ -172,6 +172,8 @@ export function ProfileDialog({
     },
   });
 
+  const [emailName, emailDomain] = user.email.split("@");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -194,7 +196,7 @@ export function ProfileDialog({
           <form.Field name="image">
             {(field) => (
               <div className="flex items-center gap-4">
-                <div className="relative">
+                <div className="relative shrink-0">
                   <div
                     {...getRootProps()}
                     className={`group relative cursor-pointer transition-all ${mutation.isPending && "cursor-not-allowed opacity-50"}`}
@@ -228,8 +230,11 @@ export function ProfileDialog({
                   </div>
                 </div>
 
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{user.email}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium wrap-anywhere">
+                    {emailName}
+                    <wbr />@{emailDomain}
+                  </p>
                   <p className="text-muted-foreground text-xs">
                     Click or drag to upload (max 4MB)
                   </p>

@@ -47,9 +47,9 @@ export default async function ProfilePage() {
           <AvatarImage src={resolveProfileImageSrc(user.image, user.updatedAt)} alt="" />
           <AvatarFallback className="bg-sky-soft text-2xl font-bold">{initials}</AvatarFallback>
         </Avatar>
-        <h1 className="mt-3 text-2xl font-bold">{user.name ?? "Peeerly member"}</h1>
+        <h1 className="mt-3 max-w-full text-2xl font-bold wrap-anywhere">{user.name ?? "Peeerly member"}</h1>
         <p className="text-muted-foreground max-w-full truncate text-sm">{user.email}</p>
-        {user.bio && <p className="mt-2 max-w-md text-sm">{user.bio}</p>}
+        {user.bio && <p className="mt-2 w-full max-w-md text-sm wrap-anywhere">{user.bio}</p>}
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           <span className="peeerly-chip bg-sun text-black">💎 {mine.length} shared</span>
           {(roles.length ? roles : ["Student"]).map((role) => (

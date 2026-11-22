@@ -128,7 +128,7 @@ export function TemplatePicker({
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-[--radix-popover-trigger-width] min-w-[280px] p-0"
+            className="w-(--radix-popover-trigger-width) max-w-[calc(100vw-1rem)] min-w-[280px] p-0"
             align="start"
           >
             <Command>

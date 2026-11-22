@@ -460,7 +460,7 @@ function TemplateEditorDialog({
             save.mutate();
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-end">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[auto_1fr] sm:items-end">
             <LogoUpload
               value={companyLogoUrl}
               onChange={setCompanyLogoUrl}
@@ -480,7 +480,7 @@ function TemplateEditorDialog({
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-1.5 sm:col-span-1">
               <Label htmlFor="tpl-role">Role</Label>
               <Input
@@ -538,12 +538,12 @@ function TemplateEditorDialog({
               {rounds.map((r, i) => (
                 <li
                   key={r.id}
-                  className="flex items-center gap-2 rounded-2xl border p-2"
+                  className="flex flex-wrap items-center gap-2 rounded-2xl border p-2 sm:flex-nowrap"
                 >
                   <span className="text-muted-foreground w-5 text-center text-sm tabular-nums">
                     {i + 1}
                   </span>
-                  <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[1fr_11.5rem]">
+                  <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_11.5rem]">
                     <Select
                       value={r.roundType}
                       onValueChange={(v) =>
@@ -592,7 +592,7 @@ function TemplateEditorDialog({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex shrink-0">
+                  <div className="flex w-full shrink-0 justify-end sm:w-auto">
                     <Button
                       type="button"
                       size="icon-sm"

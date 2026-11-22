@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 
-import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 import { companyGradient, companyInitial } from "../lib/company-color";
+import { CompanyLogoImage } from "./company-logo-image";
 
 /**
  * The company tile used on the card, detail page and resources page. Renders
@@ -17,35 +18,30 @@ export function CompanyAvatar({
   logoUrl,
   size,
   className = "",
-  imageClassName = "object-cover",
 }: {
   companyName: string;
   logoUrl?: string | null;
   /** Tailwind size classes, e.g. "h-11 w-11". Rounding comes from `rounded`. */
   size: string;
   className?: string;
-  /**
-   * Classes for the logo image (fit + padding). The default "object-cover"
-   * fills the tile edge to edge; use "object-contain p-1" for wide
-   * wordmarks that must not be cropped.
-   */
-  imageClassName?: string;
 }) {
-  const [imageFailed, setImageFailed] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string>();
 
-  if (logoUrl && !imageFailed) {
+  if (logoUrl && logoUrl !== failedUrl) {
     return (
       <div
-        className={`relative shrink-0 overflow-hidden border border-border/60 bg-zinc-50 dark:bg-zinc-100 ${size} ${className}`}
+        // cn, so that a caller's "absolute" replaces "relative".
+        className={cn(
+          "relative shrink-0 overflow-hidden border border-border/60 bg-zinc-50 dark:bg-zinc-100",
+          size,
+          className,
+        )}
       >
-        <Image
+        <CompanyLogoImage
           src={logoUrl}
           alt={`${companyName} logo`}
-          fill
-          sizes="96px"
-          unoptimized
-          className={imageClassName}
-          onError={() => setImageFailed(true)}
+          sizes="112px"
+          onError={() => setFailedUrl(logoUrl)}
         />
       </div>
     );

@@ -2,13 +2,13 @@
 
 import { useCallback, useState } from "react";
 
-import Image from "next/image";
-
 import { ImageIcon, Loader2, X } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+
+import { CompanyLogoImage } from "./company-logo-image";
 
 /**
  * Square company-logo dropzone. Sits beside the company name in the form and
@@ -24,6 +24,7 @@ export function LogoUpload({
   disabled?: boolean;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string>();
 
   const onDrop = useCallback(
     async (files: File[]) => {
@@ -70,20 +71,30 @@ export function LogoUpload({
 
   if (value) {
     return (
-      <div className="group relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-zinc-50 dark:bg-zinc-100">
-        <Image
-          src={value}
-          alt="Company logo"
-          fill
-          sizes="64px"
-          unoptimized
-          className="object-contain p-1"
-        />
+      <div className="group relative h-16 w-16 shrink-0">
+        <div className="border-border/60 relative size-full overflow-hidden rounded-xl border bg-zinc-50 dark:bg-zinc-100">
+          {value === failedUrl ? (
+            <div
+              className="flex size-full items-center justify-center text-zinc-400"
+              title="This logo couldn't be loaded"
+            >
+              <ImageIcon className="h-5 w-5" />
+            </div>
+          ) : (
+            <CompanyLogoImage
+              src={value}
+              alt="Company logo"
+              sizes="64px"
+              onError={() => setFailedUrl(value)}
+            />
+          )}
+        </div>
+        {/* Outside the tile so it doesn't cover the logo; touch screens have no hover. */}
         <Button
           type="button"
           variant="secondary"
           size="icon"
-          className="absolute top-1 right-1 h-5 w-5 border bg-background/90 opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+          className="bg-background/90 absolute -top-2 -right-2 h-6 w-6 border opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
           onClick={() => onChange(null)}
           disabled={disabled}
           aria-label="Remove logo"

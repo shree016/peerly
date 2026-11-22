@@ -32,8 +32,6 @@ export function ProfileActions({ user }: { user: User }) {
     onError: (error: Error) => toast.error(error.message || "Failed to log out"),
   });
 
-  const isDark = resolvedTheme === "dark";
-
   return (
     <>
       <ProfileDialog open={editOpen} onOpenChange={setEditOpen} user={user} />
@@ -47,12 +45,14 @@ export function ProfileActions({ user }: { user: User }) {
         <button
           type="button"
           className={rowClass}
-          onClick={() => setTheme(isDark ? "light" : "dark")}
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
         >
           <span className="bg-sun-soft flex size-9 items-center justify-center rounded-xl">
-            {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            <Sun className="hidden size-4 dark:block" />
+            <Moon className="size-4 dark:hidden" />
           </span>
-          {isDark ? "Switch to light mode" : "Switch to dark mode"}
+          <span className="dark:hidden">Switch to dark mode</span>
+          <span className="hidden dark:inline">Switch to light mode</span>
         </button>
         <button
           type="button"

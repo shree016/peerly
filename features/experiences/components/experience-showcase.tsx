@@ -90,8 +90,8 @@ const exampleClearedCount = exampleOutcomes.filter(
 export function ExperienceShowcase() {
   return (
     <div>
-      <div className="mb-5 flex items-baseline justify-between">
-        <div className="flex items-center gap-2">
+      <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-3">
+        <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-serif text-3xl font-normal">
             Inside an Experience
           </h2>
