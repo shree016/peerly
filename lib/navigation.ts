@@ -14,14 +14,13 @@ export function isImmersiveRoute(pathname: string): boolean {
 }
 
 export type NavKey =
-  "home" | "play" | "polls" | "experiences" | "share" | "profile" | "admin";
+  "home" | "play" | "polls" | "experiences" | "profile" | "admin";
 
 export function activeNavKey(pathname: string): NavKey | null {
   if (pathname === "/" || pathname.startsWith("/dashboard")) return "home";
   if (pathname.startsWith("/quiz")) return "play";
   if (pathname.startsWith("/polls")) return "polls";
   if (pathname.startsWith("/admin")) return "admin";
-  if (pathname === "/experiences/new") return "share";
   if (pathname.startsWith("/experiences")) return "experiences";
   if (pathname.startsWith("/profile")) return "profile";
   return null;

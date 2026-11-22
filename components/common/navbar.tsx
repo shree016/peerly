@@ -25,7 +25,6 @@ const baseLinks: { key: NavKey; label: string; href: string }[] = [
   { key: "play", label: "Quiz", href: "/quiz" },
   { key: "polls", label: "Polls", href: "/polls" },
   { key: "experiences", label: "Placement Experiences", href: "/experiences" },
-  { key: "share", label: "Share yours", href: "/experiences/new" },
 ];
 
 export function PeeerlyLogo({ className }: { className?: string }) {

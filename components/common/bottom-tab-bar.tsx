@@ -8,7 +8,6 @@ import {
   BriefcaseBusiness,
   House,
   type LucideIcon,
-  PenLine,
   Play,
   UserRound,
   Vote,
@@ -62,7 +61,6 @@ export function BottomTabBar() {
       href: "/experiences",
       icon: BriefcaseBusiness,
     },
-    { key: "share", label: "Share", href: "/experiences/new", icon: PenLine },
     {
       key: "profile",
       label: "Profile",
