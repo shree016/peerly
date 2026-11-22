@@ -52,6 +52,7 @@ async function pollManagerUsers() {
       id: userTable.id,
       name: userTable.name,
       email: userTable.email,
+      emailVerified: userTable.emailVerified,
       role: userTable.role,
       banned: userTable.banned,
     })

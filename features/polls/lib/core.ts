@@ -66,7 +66,9 @@ export async function closeExpiredPolls(): Promise<void> {
 
 // ── Manager access ──────────────────────────────────────────────────────────
 
-export function isAdmin(user: Pick<User, "role" | "email">): boolean {
+export function isAdmin(
+  user: Pick<User, "role" | "email" | "emailVerified">,
+): boolean {
   return getEffectiveRoles(user).includes("admin");
 }
 

@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth";
+import { BASE_ERROR_CODES, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
@@ -10,6 +10,7 @@ import { buildVerificationEmailHtml, sendEmail } from "@/lib/email";
 import db from "@/db";
 import { user as userTable } from "@/db/schema";
 import { EMAIL_POLICY_ERROR_CODE, isAllowedEmail } from "@/lib/email-policy";
+import { isSuperAdminEmail } from "@/lib/permissions/owners";
 import { DEFAULT_ROLE, ac, roles } from "@/lib/permissions/roles";
 import { syncExternalProfileImageToS3 } from "@/lib/s3/profile-image";
 
@@ -57,6 +58,18 @@ export const auth = betterAuth({
       }
       if (ctx.path === "/sign-up/email" || ctx.path === "/sign-in/email") {
         rejectDisallowedEmail(ctx.body?.email as string | undefined);
+      }
+      // A password sign-up proves nothing about who owns the inbox, so owner
+      // accounts can only be created with Google. The error is the same as
+      // for a taken email, so it doesn't reveal which addresses are owners.
+      if (
+        ctx.path === "/sign-up/email" &&
+        isSuperAdminEmail(ctx.body?.email as string | undefined)
+      ) {
+        throw APIError.from(
+          "UNPROCESSABLE_ENTITY",
+          BASE_ERROR_CODES.USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL,
+        );
       }
     }),
   },

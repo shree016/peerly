@@ -22,9 +22,9 @@ import {
 } from "@/lib/permissions/roles";
 import {
   getEffectiveRoles,
-  isSuperAdminEmail,
   requirePermission,
 } from "@/lib/permissions/server";
+import { isVerifiedOwner } from "@/lib/permissions/owners";
 
 import db from "@/db";
 import { auditLog, session, user } from "@/db/schema";
@@ -76,6 +76,7 @@ export async function listUsersForAdmin(
           id: user.id,
           name: user.name,
           email: user.email,
+          emailVerified: user.emailVerified,
           image: user.image,
           role: user.role,
           banned: user.banned,
@@ -98,7 +99,7 @@ export async function listUsersForAdmin(
         image: r.image,
         roles: getEffectiveRoles(r),
         storedRoles: parseRoles(r.role),
-        isOwner: isSuperAdminEmail(r.email),
+        isOwner: isVerifiedOwner(r),
         banned: r.banned ?? false,
         banReason: r.banReason,
         createdAt: r.createdAt.toISOString(),
@@ -125,6 +126,7 @@ async function countAdmins(excludeUserId?: string): Promise<number> {
     .select({
       id: user.id,
       email: user.email,
+      emailVerified: user.emailVerified,
       role: user.role,
       banned: user.banned,
     })
@@ -148,7 +150,13 @@ async function countAdmins(excludeUserId?: string): Promise<number> {
 async function loadTarget(userId: string) {
   const target = await db.query.user.findFirst({
     where: eq(user.id, userId),
-    columns: { id: true, email: true, role: true, banned: true },
+    columns: {
+      id: true,
+      email: true,
+      emailVerified: true,
+      role: true,
+      banned: true,
+    },
   });
   if (!target) throw new AppError("USER_NOT_FOUND", "User not found.", 404);
   return target;
@@ -170,7 +178,7 @@ export async function setUserRoles(input: z.input<typeof setRolesSchema>) {
     const after = parseRoles(nextValue);
 
     const losingAdmin = before.includes("admin") && !after.includes("admin");
-    if (losingAdmin && !isSuperAdminEmail(target.email)) {
+    if (losingAdmin && !isVerifiedOwner(target)) {
       const remaining = await countAdmins(target.id);
       if (remaining === 0) {
         throw new AppError(
@@ -193,7 +201,7 @@ export async function setUserRoles(input: z.input<typeof setRolesSchema>) {
     ]);
 
     return {
-      roles: getEffectiveRoles({ role: nextValue, email: target.email }),
+      roles: getEffectiveRoles({ ...target, role: nextValue }),
     };
   });
 }
@@ -215,7 +223,7 @@ export async function banUser(input: z.input<typeof banSchema>) {
       );
     }
     const target = await loadTarget(userId);
-    if (isSuperAdminEmail(target.email)) {
+    if (isVerifiedOwner(target)) {
       throw new AppError("OWNER", "Owner accounts can't be suspended.", 400);
     }
     if (parseRoles(target.role).includes("admin")) {

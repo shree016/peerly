@@ -6,6 +6,7 @@ import { getUser } from "@/actions/user";
 
 import type { User } from "@/types";
 
+import { isSuperAdminEmail, isVerifiedOwner } from "./owners";
 import {
   type Permission,
   ROLE_NAMES,
@@ -14,30 +15,21 @@ import {
   rolesHavePermission,
 } from "./roles";
 
+type RoleSource = Pick<User, "role" | "email" | "emailVerified">;
+
 /**
- * Owner accounts that are ALWAYS admin, set only through the private
- * SUPER_ADMIN_EMAILS env var (Vercel / .env.local — never committed). This is
- * how the very first admin gets access, and it guarantees peerly can never be
+ * Roles stored on the user, plus "admin" for verified env owners. This is how
+ * the very first admin gets access, and it guarantees peerly can never be
  * left without anyone able to manage roles.
+ *
+ * An unverified account on an owner email may be an impostor, so it gets no
+ * elevated role at all, not even one stored in the database.
  */
-const superAdminEmails = new Set(
-  (process.env.SUPER_ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean),
-);
-
-export function isSuperAdminEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  return superAdminEmails.has(email.trim().toLowerCase());
-}
-
-type RoleSource = Pick<User, "role" | "email">;
-
-/** Roles stored on the user, plus "admin" for env-configured owners. */
 export function getEffectiveRoles(user: RoleSource): RoleName[] {
+  if (isSuperAdminEmail(user.email) && !user.emailVerified) return ["student"];
+
   const stored = parseRoles(user.role);
-  if (isSuperAdminEmail(user.email) && !stored.includes("admin")) {
+  if (isVerifiedOwner(user) && !stored.includes("admin")) {
     return [...stored.filter((r) => r !== "student"), "admin"];
   }
   return stored;

@@ -27,7 +27,7 @@ Copy `.env.example` to `.env.local` and fill in the values.
 Notable variables:
 
 - `NEXT_PUBLIC_ALLOWED_EMAIL_DOMAIN`: e.g. `bmsce.ac.in` for a "college email only" rule. Leave it empty to allow any email.
-- `SUPER_ADMIN_EMAILS`: the owner account(s). They are always admin, and can't be removed or suspended from the UI. Set it only in `.env.local` or Vercel, **never in code**.
+- `SUPER_ADMIN_EMAILS`: the owner account(s). Once their email is verified they are always admin, and can't be removed or suspended from the UI. New owner accounts must be created with Google, because password sign-up is blocked for these addresses. Set it only in `.env.local` or Vercel, **never in code**.
 
 ### 2. Database
 
@@ -36,7 +36,7 @@ Notable variables:
    ```bash
    npm run db:migrate   # applies every migration in drizzle/
    ```
-3. Bootstrap roles (one time). Sign in once with the owner account, then run:
+3. Bootstrap roles (one time). Sign in once with the owner account using Google, then run:
    ```bash
    npm run roles:bootstrap
    ```

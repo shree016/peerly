@@ -34,7 +34,7 @@ export async function requireAdmin(): Promise<User> {
 }
 
 export function canManageQuiz(
-  user: Pick<User, "role" | "email"> | null | undefined,
+  user: Pick<User, "role" | "email" | "emailVerified"> | null | undefined,
 ): boolean {
   return userCan(user, "quiz:manage");
 }

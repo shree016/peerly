@@ -8,8 +8,8 @@
  *
  * Usage:  npm run roles:bootstrap
  *
- * Accounts must already exist (the person has signed in once). Missing
- * accounts are reported by count only. After running, remove the
+ * Accounts must already exist with a verified email (Google or verification
+ * link). Missing and unverified accounts are reported by count only. After running, remove the
  * BOOTSTRAP_* variables — from then on roles are managed at /admin/users.
  */
 import { config } from "dotenv";
@@ -17,7 +17,7 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 
 async function main() {
-  const { inArray, sql } = await import("drizzle-orm");
+  const { and, eq, inArray, sql } = await import("drizzle-orm");
   const { default: db } = await import("../db");
   const { auditLog, user } = await import("../db/schema");
   const { parseRoles, serializeRoles } =
@@ -41,7 +41,12 @@ async function main() {
     const rows = await db
       .select({ id: user.id, email: user.email, role: user.role })
       .from(user)
-      .where(inArray(sql`lower(${user.email})`, emails));
+      .where(
+        and(
+          eq(user.emailVerified, true),
+          inArray(sql`lower(${user.email})`, emails),
+        ),
+      );
 
     let updated = 0;
     for (const row of rows) {
@@ -64,7 +69,7 @@ async function main() {
       updated++;
     }
     console.log(
-      `${role}: ${updated} updated, ${rows.length - updated} already had it, ${emails.length - rows.length} not signed up yet`,
+      `${role}: ${updated} updated, ${rows.length - updated} already had it, ${emails.length - rows.length} not signed up or not verified`,
     );
   }
 }
