@@ -2,15 +2,12 @@ import { BriefcaseBusiness, PenLine } from "lucide-react";
 
 import { CtaPill } from "@/components/common/cta-pill";
 
-import { CoordinatorSetup } from "@/features/experiences/components/coordinator-setup";
 import { ExperienceBrowser } from "@/features/experiences/components/experience-browser";
 import { ExperienceShowcase } from "@/features/experiences/components/experience-showcase";
 import {
   getAllExperiences,
   getExperienceStats,
 } from "@/features/experiences/lib/actions";
-
-import { getUser } from "@/actions/user";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +26,10 @@ export default async function ExperiencesPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  const [{ q }, experiences, stats, currentUser] = await Promise.all([
+  const [{ q }, experiences, stats] = await Promise.all([
     searchParams,
     getAllExperiences(),
     getExperienceStats(),
-    getUser(),
   ]);
 
   const statTiles = [
@@ -63,9 +59,6 @@ export default async function ExperiencesPage({
             label="Share your experience"
             icon={PenLine}
           />
-          {currentUser && !currentUser.isCoordinator && (
-            <CoordinatorSetup prominent />
-          )}
         </div>
         <span
           aria-hidden

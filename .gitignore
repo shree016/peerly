@@ -51,3 +51,17 @@ next-env.d.ts
 
 # Local-only academic seed data (use placement-academic.example.json as template)
 /scripts/data/placement-academic.json
+
+# ── Student personal data guard ─────────────────────────────────────────
+# Rosters are imported through the coordinator UI straight into the DB and
+# must never be committed (this repo is public). Only *.example.* templates
+# with fake data are allowed.
+*.csv
+*.xlsx
+*.xls
+*roster*.json
+*students*.json
+/scripts/data/*
+!*.example.csv
+!*.example.json
+!/scripts/data/*.example.*

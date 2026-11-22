@@ -17,7 +17,7 @@ export function CompanyAvatar({
   logoUrl,
   size,
   className = "",
-  imageClassName = "p-1",
+  imageClassName = "object-cover",
 }: {
   companyName: string;
   logoUrl?: string | null;
@@ -25,9 +25,9 @@ export function CompanyAvatar({
   size: string;
   className?: string;
   /**
-   * Padding around the logo image. Circular tiles need more (~15%) so a
-   * square logo sits fully inside the circle instead of having its corners
-   * clipped.
+   * Classes for the logo image (fit + padding). The default "object-cover"
+   * fills the tile edge to edge; use "object-contain p-1" for wide
+   * wordmarks that must not be cropped.
    */
   imageClassName?: string;
 }) {
@@ -44,7 +44,7 @@ export function CompanyAvatar({
           fill
           sizes="96px"
           unoptimized
-          className={`object-contain ${imageClassName}`}
+          className={imageClassName}
           onError={() => setImageFailed(true)}
         />
       </div>

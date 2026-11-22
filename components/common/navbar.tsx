@@ -9,16 +9,21 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { usePendingPollCount } from "@/features/polls/hooks/use-pending-polls";
+
+import { getMyAccess } from "@/actions/access";
 import { getUser } from "@/actions/user";
 
 import { type NavKey, activeNavKey, isImmersiveRoute } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
+import { NavBadge } from "./nav-badge";
 import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
 
-const desktopLinks: { key: NavKey; label: string; href: string }[] = [
+const baseLinks: { key: NavKey; label: string; href: string }[] = [
   { key: "play", label: "Quiz", href: "/quiz" },
+  { key: "polls", label: "Polls", href: "/polls" },
   { key: "experiences", label: "Placement Experiences", href: "/experiences" },
   { key: "share", label: "Share yours", href: "/experiences/new" },
 ];
@@ -50,9 +55,24 @@ const Navbar = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+  const { data: access } = useQuery({
+    queryKey: ["access"],
+    queryFn: getMyAccess,
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const pendingPolls = usePendingPollCount(!!user);
+
   if (isImmersiveRoute(pathname)) return null;
 
   const active = activeNavKey(pathname);
+  const desktopLinks = [
+    ...baseLinks.filter((l) => l.key !== "polls" || user),
+    ...(access?.permissions.includes("access:manage-roles")
+      ? [{ key: "admin" as NavKey, label: "Admin", href: "/admin/users" }]
+      : []),
+  ];
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-5 sm:pt-3">
@@ -68,13 +88,14 @@ const Navbar = () => {
               <Link
                 href={link.href}
                 className={cn(
-                  "rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+                  "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors",
                   active === link.key
                     ? "bg-sky-soft text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
               >
                 {link.label}
+                {link.key === "polls" && <NavBadge count={pendingPolls} />}
               </Link>
             </li>
           ))}

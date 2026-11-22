@@ -19,7 +19,7 @@ export default async function QuizAdminLayout({
     redirect("/auth/login?callbackUrl=/quiz");
   }
 
-  if (!canManageQuiz(user.email)) {
+  if (!canManageQuiz(user)) {
     redirect("/quiz/join");
   }
 

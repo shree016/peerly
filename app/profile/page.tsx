@@ -10,10 +10,10 @@ import { RankRow } from "@/components/common/podium";
 import { CompanyAvatar } from "@/features/experiences/components/company-avatar";
 import { getAllExperiences } from "@/features/experiences/lib/actions";
 import { ProfileActions } from "@/features/profile/components/profile-actions";
-import { canManageQuiz } from "@/features/quiz/lib/auth";
-
 import { getUser } from "@/actions/user";
 
+import { ROLE_LABELS } from "@/lib/permissions/roles";
+import { getEffectiveRoles } from "@/lib/permissions/server";
 import { resolveProfileImageSrc } from "@/lib/s3/profile-image";
 
 export const dynamic = "force-dynamic";
@@ -36,10 +36,9 @@ export default async function ProfilePage() {
       .slice(0, 2)
       .toUpperCase() || user.email[0].toUpperCase();
 
-  const roles = [
-    canManageQuiz(user.email) && "Quiz coordinator",
-    user.isCoordinator && "Placement coordinator",
-  ].filter(Boolean) as string[];
+  const roles = getEffectiveRoles(user)
+    .filter((r) => r !== "student")
+    .map((r) => ROLE_LABELS[r]);
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-4 sm:px-6 sm:pt-8">

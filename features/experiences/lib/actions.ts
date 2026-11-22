@@ -13,6 +13,8 @@ import {
 
 import { getUser } from "@/actions/user";
 
+import { userCan } from "@/lib/permissions/server";
+
 import db from "@/db";
 import {
   interviewExperience,
@@ -548,7 +550,10 @@ export async function deleteComment(id: string) {
     columns: { authorId: true, experienceId: true },
   });
   if (!comment) throw new Error("Question not found");
-  if (comment.authorId !== currentUser.id && !currentUser.isCoordinator) {
+  if (
+    comment.authorId !== currentUser.id &&
+    !userCan(currentUser, "experience:moderate")
+  ) {
     throw new Error("You can only delete your own question");
   }
 
@@ -561,9 +566,10 @@ export async function deleteComment(id: string) {
 
 export async function setExperienceVerified(id: string, verified: boolean) {
   const currentUser = await getUser();
-  if (!currentUser?.isCoordinator) {
+  if (!userCan(currentUser, "experience:verify")) {
     throw new Error("Coordinator access required");
   }
+  if (!currentUser) throw new Error("Unauthorized");
 
   await db
     .update(interviewExperience)

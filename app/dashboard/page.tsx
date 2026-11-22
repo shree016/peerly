@@ -14,6 +14,8 @@ import { canManageQuiz } from "@/features/quiz/lib/auth";
 
 import { getUser } from "@/actions/user";
 
+import { primaryRoleLabel } from "@/lib/permissions/roles";
+import { getEffectiveRoles } from "@/lib/permissions/server";
 import { resolveProfileImageSrc } from "@/lib/s3/profile-image";
 
 export const dynamic = "force-dynamic";
@@ -62,7 +64,7 @@ function rankCompanies(experiences: ExperienceListItem[]): CompanyRank[] {
 
 export default async function DashboardPage() {
   const user = (await getUser())!; // layout guarantees a signed-in user
-  const isQuizAdmin = canManageQuiz(user.email);
+  const isQuizAdmin = canManageQuiz(user);
 
   let experiences: ExperienceListItem[] = [];
   try {
@@ -103,7 +105,7 @@ export default async function DashboardPage() {
             </p>
             <h1 className="truncate text-xl font-bold sm:text-2xl">{firstName}</h1>
             <span className="peeerly-chip bg-card mt-0.5 border px-2.5 py-0.5 text-[0.7rem]">
-              {isQuizAdmin ? "Quiz coordinator" : user.isCoordinator ? "Coordinator" : "Student"}
+              {primaryRoleLabel(getEffectiveRoles(user))}
             </span>
           </div>
         </div>
@@ -232,7 +234,6 @@ export default async function DashboardPage() {
                           companyName={exp.companyName}
                           logoUrl={exp.companyLogoUrl}
                           size="size-11 rounded-full text-base"
-                          imageClassName="p-[15%]"
                         />
                       }
                       name={exp.companyName}
@@ -272,7 +273,6 @@ export default async function DashboardPage() {
                       companyName={c.name}
                       logoUrl={c.logoUrl}
                       size="size-full rounded-full text-2xl"
-                      imageClassName="p-[15%]"
                     />
                   ),
                   value: <>📝 {c.count}</>,
@@ -292,7 +292,6 @@ export default async function DashboardPage() {
                           companyName={c.name}
                           logoUrl={c.logoUrl}
                           size="size-11 rounded-full text-base"
-                          imageClassName="p-[15%]"
                         />
                       }
                       name={c.name}

@@ -3,7 +3,8 @@
 import { useState } from "react";
 
 import { useProgress, useRouter } from "@bprogress/next";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { ProfileDialog } from "@/features/profile/components/profile-dialog";
 
+import { getMyAccess } from "@/actions/access";
 import { logout } from "@/actions/auth";
 
 import { Loader } from "@/components/icons";
@@ -35,6 +37,11 @@ export function UserMenu({ user }: UserMenuProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const { start, stop } = useProgress();
+  const { data: access } = useQuery({
+    queryKey: ["access"],
+    queryFn: getMyAccess,
+    staleTime: 1000 * 60 * 5,
+  });
 
   const logoutMutation = useMutation({
     mutationFn: logout,
@@ -118,6 +125,20 @@ export function UserMenu({ user }: UserMenuProps) {
               <User className="mr-2" />
               Profile
             </Button>
+            {access?.permissions.includes("access:manage-roles") && (
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                size="sm"
+                onClick={() => {
+                  setPopoverOpen(false);
+                  router.push("/admin/users");
+                }}
+              >
+                <ShieldCheck className="mr-2 size-4" />
+                Admin
+              </Button>
+            )}
             <Button
               variant="ghost"
               className="text-destructive hover:text-destructive hover:bg-destructive/8 w-full justify-start"

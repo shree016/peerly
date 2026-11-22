@@ -39,6 +39,8 @@ import {
 
 import { getUser } from "@/actions/user";
 
+import { userCan } from "@/lib/permissions/server";
+
 const resultColor: Record<string, string> = {
   Selected: "bg-emerald-500 text-white hover:bg-emerald-600",
   Rejected: "bg-red-500 text-white hover:bg-red-600",
@@ -122,7 +124,7 @@ export default async function ExperienceDetailPage({
             </Badge>
           )}
           <div className="flex gap-2">
-            {currentUser?.isCoordinator && (
+            {userCan(currentUser, "experience:verify") && (
               <VerifyExperienceButton
                 id={experience.id}
                 isVerified={experience.isVerified}
@@ -325,7 +327,7 @@ export default async function ExperienceDetailPage({
         experienceId={experience.id}
         authorId={experience.authorId}
         currentUserId={currentUser?.id ?? null}
-        isCoordinator={currentUser?.isCoordinator ?? false}
+        canModerate={userCan(currentUser, "experience:moderate")}
         initialComments={comments}
       />
     </div>

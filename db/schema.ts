@@ -35,10 +35,14 @@ export const user = pgTable("user", {
   linkedin: text("linkedin"),
   portfolio: text("portfolio"),
   bio: text("bio"),
-  isCoordinator: boolean("is_coordinator").notNull().default(false),
-  isElectivePollAdmin: boolean("is_elective_poll_admin")
-    .notNull()
-    .default(false),
+  // RBAC (Better Auth admin plugin). Comma-separated role names, e.g.
+  // "placement_coordinator,activity_coordinator". Role → permission mapping
+  // lives in code (lib/permissions/roles.ts); assignments are changed only
+  // through the audited actions in features/admin.
+  role: text("role").default("student"),
+  banned: boolean("banned").default(false),
+  banReason: text("banReason"),
+  banExpires: timestamp("banExpires", { mode: "date" }),
   createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updatedAt", { mode: "date" })
     .notNull()
@@ -62,6 +66,9 @@ export const session = pgTable("session", {
   userId: text("userId")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  // Required by the Better Auth admin plugin schema. Impersonation endpoints
+  // are blocked in lib/auth.ts, so this stays null.
+  impersonatedBy: text("impersonatedBy"),
 });
 
 // Account Table
@@ -566,6 +573,8 @@ export const userRelations = relations(user, ({ many }) => ({
   quizSessions: many(quizSession),
   interviewExperiences: many(interviewExperience),
   interviewExperienceComments: many(interviewExperienceComment),
+  polls: many(poll),
+  pollResponses: many(pollResponse),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -810,6 +819,425 @@ export const quizQuestionSourceCitationRelations = relations(
     chunk: one(quizEventMaterialChunk, {
       fields: [quizQuestionSourceCitation.chunkId],
       references: [quizEventMaterialChunk.id],
+    }),
+  }),
+);
+
+// ════════════════════════════════════════════════════════════════════════════
+// RBAC audit log
+// ════════════════════════════════════════════════════════════════════════════
+
+// Append-only record of every sensitive action: role changes, bans, session
+// revocations, roster imports/edits/deletes and any export of personal data.
+// `details` must hold ids/counts only — never student names, USNs or emails.
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    actorId: text("actor_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    action: text("action").notNull(), // e.g. 'role.update', 'roster.import'
+    targetType: text("target_type"), // 'user' | 'student' | 'poll' | 'roster'
+    targetId: text("target_id"),
+    details: jsonb("details").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("audit_log_created_at_idx").on(t.createdAt),
+    index("audit_log_actor_id_idx").on(t.actorId),
+  ],
+);
+
+// ════════════════════════════════════════════════════════════════════════════
+// Student roster — the source of truth for poll audience eligibility.
+// Rows enter ONLY through the coordinator roster UI (never seed files in git).
+// ════════════════════════════════════════════════════════════════════════════
+
+export const student = pgTable(
+  "student",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    usn: text("usn").notNull().unique(), // stored uppercase
+    email: text("email").notNull().unique(), // stored lowercase
+    batch: text("batch").notNull(), // e.g. '2025-27'
+    section: text("section").notNull(), // e.g. 'A'
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("student_batch_section_idx").on(t.batch, t.section)],
+);
+
+// ════════════════════════════════════════════════════════════════════════════
+// Polls — one table for both kinds:
+//   'quick'    → Quick Polls (single / multiple choice, yes-no, short answer)
+//   'seatlock' → SeatLock (limited seats per option, first come first served)
+// ════════════════════════════════════════════════════════════════════════════
+
+export const poll = pgTable(
+  "poll",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    creatorId: text("creator_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    kind: text("kind").notNull(), // 'quick' | 'seatlock'
+    // quick: 'single' | 'multiple' | 'yes_no' | 'short_answer'; seatlock: 'single'
+    questionType: text("question_type").notNull().default("single"),
+    title: text("title").notNull(),
+    description: text("description"),
+    status: text("status").notNull().default("draft"), // 'draft' | 'open' | 'closed'
+    audienceMode: text("audience_mode").notNull().default("all"), // 'all' | 'group' | 'custom'
+    // 'shared' → any poll manager can manage it; 'private' → creator + accepted collaborators
+    manageMode: text("manage_mode").notNull().default("shared"),
+    showResults: boolean("show_results").notNull().default(false),
+    isAnonymous: boolean("is_anonymous").notNull().default(false), // quick polls only
+    allowVoteChange: boolean("allow_vote_change").notNull().default(true), // quick polls only
+    closesAt: timestamp("closes_at", { mode: "date" }), // enforced: past this the poll is closed
+    openedAt: timestamp("opened_at", { mode: "date" }),
+    closedAt: timestamp("closed_at", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("poll_status_idx").on(t.status),
+    index("poll_creator_id_idx").on(t.creatorId),
+  ],
+);
+
+export const pollOption = pgTable(
+  "poll_option",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    pollId: text("poll_id")
+      .notNull()
+      .references(() => poll.id, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    description: text("description"),
+    capacity: integer("capacity"), // seatlock only
+    seatsTaken: integer("seats_taken").notNull().default(0), // only mutated by the atomic seat-lock statement
+    position: integer("position").notNull(),
+    status: text("status").notNull().default("active"), // 'active' | 'archived'
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [unique("poll_option_poll_position_unique").on(t.pollId, t.position)],
+);
+
+// 'group' audience: exactly one batch (+ optional section) per poll.
+export const pollAudienceRule = pgTable(
+  "poll_audience_rule",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    pollId: text("poll_id")
+      .notNull()
+      .references(() => poll.id, { onDelete: "cascade" }),
+    batch: text("batch").notNull(),
+    section: text("section"), // null = every section in the batch
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("poll_audience_rule_poll_id_unique").on(t.pollId)],
+);
+
+// 'custom' audience: explicit allow-list of roster students.
+export const pollAudienceMember = pgTable(
+  "poll_audience_member",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    pollId: text("poll_id")
+      .notNull()
+      .references(() => poll.id, { onDelete: "cascade" }),
+    studentId: text("student_id")
+      .notNull()
+      .references(() => student.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("poll_audience_member_poll_student_unique").on(t.pollId, t.studentId),
+  ],
+);
+
+// 'group' audience: students excluded from an otherwise matching group.
+export const pollAudienceExclusion = pgTable(
+  "poll_audience_exclusion",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    pollId: text("poll_id")
+      .notNull()
+      .references(() => poll.id, { onDelete: "cascade" }),
+    studentId: text("student_id")
+      .notNull()
+      .references(() => student.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("poll_audience_exclusion_poll_student_unique").on(
+      t.pollId,
+      t.studentId,
+    ),
+  ],
+);
+
+// One row per user per poll. Chosen options live in poll_response_option.
+export const pollResponse = pgTable(
+  "poll_response",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    pollId: text("poll_id")
+      .notNull()
+      .references(() => poll.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    textAnswer: text("text_answer"), // short_answer polls only
+    // Roster snapshot at submission time (audit trail if the roster changes).
+    studentUsn: text("student_usn"),
+    studentName: text("student_name"),
+    studentBatch: text("student_batch"),
+    studentSection: text("student_section"),
+    // Set only when submitted through a reopen grant on a closed poll.
+    reopenGrantId: text("reopen_grant_id").references(
+      (): AnyPgColumn => pollReopenGrant.id,
+      { onDelete: "set null" },
+    ),
+    submittedAt: timestamp("submitted_at", { mode: "date" })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    unique("poll_response_poll_user_unique").on(t.pollId, t.userId),
+    index("poll_response_poll_id_idx").on(t.pollId),
+  ],
+);
+
+export const pollResponseOption = pgTable(
+  "poll_response_option",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    responseId: text("response_id")
+      .notNull()
+      .references(() => pollResponse.id, { onDelete: "cascade" }),
+    pollId: text("poll_id")
+      .notNull()
+      .references(() => poll.id, { onDelete: "cascade" }),
+    optionId: text("option_id")
+      .notNull()
+      .references(() => pollOption.id, { onDelete: "restrict" }),
+  },
+  (t) => [
+    unique("poll_response_option_response_option_unique").on(
+      t.responseId,
+      t.optionId,
+    ),
+    index("poll_response_option_option_id_idx").on(t.optionId),
+    index("poll_response_option_poll_id_idx").on(t.pollId),
+  ],
+);
+
+// Lets a manager admit specific roster students into a closed (or otherwise
+// out-of-audience) poll. Revoking sets revokedAt instead of deleting, so the
+// full history of late access stays auditable.
+export const pollReopenGrant = pgTable(
+  "poll_reopen_grant",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    pollId: text("poll_id")
+      .notNull()
+      .references(() => poll.id, { onDelete: "cascade" }),
+    studentId: text("student_id")
+      .notNull()
+      .references(() => student.id, { onDelete: "cascade" }),
+    remarks: text("remarks").notNull(),
+    grantedBy: text("granted_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    grantedAt: timestamp("granted_at", { mode: "date" }).notNull().defaultNow(),
+    revokedAt: timestamp("revoked_at", { mode: "date" }),
+    revokedBy: text("revoked_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+  },
+  (t) => [
+    uniqueIndex("poll_reopen_grant_poll_student_active_unique")
+      .on(t.pollId, t.studentId)
+      .where(sql`${t.revokedAt} is null`),
+    index("poll_reopen_grant_poll_id_idx").on(t.pollId),
+  ],
+);
+
+// Collaborators on a 'private' poll. Only users who can manage polls may be
+// invited; access starts once the invitee accepts.
+export const pollCollaborator = pgTable(
+  "poll_collaborator",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    pollId: text("poll_id")
+      .notNull()
+      .references(() => poll.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("pending"), // 'pending' | 'accepted' | 'declined'
+    invitedBy: text("invited_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    invitedAt: timestamp("invited_at", { mode: "date" }).notNull().defaultNow(),
+    respondedAt: timestamp("responded_at", { mode: "date" }),
+  },
+  (t) => [
+    unique("poll_collaborator_poll_user_unique").on(t.pollId, t.userId),
+    index("poll_collaborator_user_id_idx").on(t.userId),
+  ],
+);
+
+// ── Relations ───────────────────────────────────────────────────────────────
+
+export const auditLogRelations = relations(auditLog, ({ one }) => ({
+  actor: one(user, { fields: [auditLog.actorId], references: [user.id] }),
+}));
+
+export const studentRelations = relations(student, ({ many }) => ({
+  audienceMemberships: many(pollAudienceMember),
+  audienceExclusions: many(pollAudienceExclusion),
+  reopenGrants: many(pollReopenGrant),
+}));
+
+export const pollRelations = relations(poll, ({ one, many }) => ({
+  creator: one(user, { fields: [poll.creatorId], references: [user.id] }),
+  options: many(pollOption),
+  audienceRules: many(pollAudienceRule),
+  audienceMembers: many(pollAudienceMember),
+  audienceExclusions: many(pollAudienceExclusion),
+  responses: many(pollResponse),
+  reopenGrants: many(pollReopenGrant),
+  collaborators: many(pollCollaborator),
+}));
+
+export const pollOptionRelations = relations(pollOption, ({ one, many }) => ({
+  poll: one(poll, { fields: [pollOption.pollId], references: [poll.id] }),
+  responseOptions: many(pollResponseOption),
+}));
+
+export const pollAudienceRuleRelations = relations(
+  pollAudienceRule,
+  ({ one }) => ({
+    poll: one(poll, { fields: [pollAudienceRule.pollId], references: [poll.id] }),
+  }),
+);
+
+export const pollAudienceMemberRelations = relations(
+  pollAudienceMember,
+  ({ one }) => ({
+    poll: one(poll, {
+      fields: [pollAudienceMember.pollId],
+      references: [poll.id],
+    }),
+    student: one(student, {
+      fields: [pollAudienceMember.studentId],
+      references: [student.id],
+    }),
+  }),
+);
+
+export const pollAudienceExclusionRelations = relations(
+  pollAudienceExclusion,
+  ({ one }) => ({
+    poll: one(poll, {
+      fields: [pollAudienceExclusion.pollId],
+      references: [poll.id],
+    }),
+    student: one(student, {
+      fields: [pollAudienceExclusion.studentId],
+      references: [student.id],
+    }),
+  }),
+);
+
+export const pollResponseRelations = relations(
+  pollResponse,
+  ({ one, many }) => ({
+    poll: one(poll, { fields: [pollResponse.pollId], references: [poll.id] }),
+    user: one(user, { fields: [pollResponse.userId], references: [user.id] }),
+    reopenGrant: one(pollReopenGrant, {
+      fields: [pollResponse.reopenGrantId],
+      references: [pollReopenGrant.id],
+    }),
+    options: many(pollResponseOption),
+  }),
+);
+
+export const pollResponseOptionRelations = relations(
+  pollResponseOption,
+  ({ one }) => ({
+    response: one(pollResponse, {
+      fields: [pollResponseOption.responseId],
+      references: [pollResponse.id],
+    }),
+    option: one(pollOption, {
+      fields: [pollResponseOption.optionId],
+      references: [pollOption.id],
+    }),
+  }),
+);
+
+export const pollReopenGrantRelations = relations(
+  pollReopenGrant,
+  ({ one }) => ({
+    poll: one(poll, { fields: [pollReopenGrant.pollId], references: [poll.id] }),
+    student: one(student, {
+      fields: [pollReopenGrant.studentId],
+      references: [student.id],
+    }),
+    grantor: one(user, {
+      fields: [pollReopenGrant.grantedBy],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const pollCollaboratorRelations = relations(
+  pollCollaborator,
+  ({ one }) => ({
+    poll: one(poll, { fields: [pollCollaborator.pollId], references: [poll.id] }),
+    user: one(user, {
+      fields: [pollCollaborator.userId],
+      references: [user.id],
     }),
   }),
 );

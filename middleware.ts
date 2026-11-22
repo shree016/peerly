@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Routes that require a signed-in user. Quiz *play* routes stay public so
 // anyone with a join code can play without an account.
-const PROTECTED_PREFIXES = ["/dashboard", "/profile", "/quiz", "/experiences"];
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/profile",
+  "/quiz",
+  "/experiences",
+  "/polls",
+  "/admin",
+];
 
 const QUIZ_PUBLIC_PREFIXES = ["/quiz/join", "/quiz/play"];
 
@@ -55,5 +62,9 @@ export const config = {
     "/quiz/events/:path*",
     "/quiz/sessions/:path*",
     "/experiences/:path*",
+    "/polls",
+    "/polls/:path*",
+    "/admin",
+    "/admin/:path*",
   ],
 };

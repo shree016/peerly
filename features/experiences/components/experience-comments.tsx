@@ -18,13 +18,13 @@ export function ExperienceComments({
   experienceId,
   authorId,
   currentUserId,
-  isCoordinator,
+  canModerate,
   initialComments,
 }: {
   experienceId: string;
   authorId: string;
   currentUserId: string | null;
-  isCoordinator: boolean;
+  canModerate: boolean;
   initialComments: CommentWithAuthor[];
 }) {
   const [comments, setComments] = useState(initialComments);
@@ -104,7 +104,7 @@ export function ExperienceComments({
         <div className="space-y-3">
           {comments.map((comment) => {
             const canDelete =
-              currentUserId === comment.authorId || isCoordinator;
+              currentUserId === comment.authorId || canModerate;
             return (
               <div key={comment.id} className="flex items-start gap-2.5">
                 <Avatar className="h-7 w-7 shrink-0">

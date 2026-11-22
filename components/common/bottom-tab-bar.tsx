@@ -11,12 +11,17 @@ import {
   PenLine,
   Play,
   UserRound,
+  Vote,
 } from "lucide-react";
+
+import { usePendingPollCount } from "@/features/polls/hooks/use-pending-polls";
 
 import { getUser } from "@/actions/user";
 
 import { type NavKey, activeNavKey, isImmersiveRoute } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+
+import { NavBadge } from "./nav-badge";
 
 interface Tab {
   key: NavKey;
@@ -39,6 +44,8 @@ export function BottomTabBar() {
     staleTime: 1000 * 60 * 5,
   });
 
+  const pendingPolls = usePendingPollCount(!!user);
+
   if (isImmersiveRoute(pathname)) return null;
 
   const active = activeNavKey(pathname);
@@ -46,6 +53,9 @@ export function BottomTabBar() {
   const tabs: Tab[] = [
     { key: "home", label: "Home", href: user ? "/dashboard" : "/", icon: House },
     { key: "play", label: "Play", href: "/quiz/join", icon: Play },
+    ...(user
+      ? [{ key: "polls" as NavKey, label: "Polls", href: "/polls", icon: Vote }]
+      : []),
     {
       key: "experiences",
       label: "Placements",
@@ -75,12 +85,12 @@ export function BottomTabBar() {
             const isActive = active === tab.key;
             const Icon = tab.icon;
             return (
-              <li key={tab.key} className="flex-1">
+              <li key={tab.key} className="min-w-0 flex-1">
                 <Link
                   href={tab.href}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[1.35rem] px-1 text-[0.68rem] font-semibold transition-all duration-200",
+                    "relative flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[1.35rem] px-1 text-[0.68rem] font-semibold transition-all duration-200",
                     isActive
                       ? "bg-sky text-white shadow-md"
                       : "text-muted-foreground hover:text-foreground active:scale-95",
@@ -91,7 +101,10 @@ export function BottomTabBar() {
                     strokeWidth={isActive ? 2.4 : 2}
                     aria-hidden
                   />
-                  <span className="leading-none">{tab.label}</span>
+                  <span className="max-w-full truncate leading-none">{tab.label}</span>
+                  {tab.key === "polls" && (
+                    <NavBadge count={pendingPolls} className="absolute top-1 right-1" />
+                  )}
                 </Link>
               </li>
             );

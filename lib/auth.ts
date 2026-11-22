@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
+import { admin } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 
 import { buildVerificationEmailHtml, sendEmail } from "@/lib/email";
@@ -9,6 +10,7 @@ import { buildVerificationEmailHtml, sendEmail } from "@/lib/email";
 import db from "@/db";
 import { user as userTable } from "@/db/schema";
 import { EMAIL_POLICY_ERROR_CODE, isAllowedEmail } from "@/lib/email-policy";
+import { DEFAULT_ROLE, ac, roles } from "@/lib/permissions/roles";
 import { syncExternalProfileImageToS3 } from "@/lib/s3/profile-image";
 
 function rejectDisallowedEmail(email: string | null | undefined) {
@@ -46,6 +48,13 @@ export const auth = betterAuth({
   },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      // The admin plugin's own HTTP endpoints (set-role, ban, impersonate,
+      // set-password, remove-user, …) would bypass our audit log and the
+      // "last admin can't be removed" rule, so they are closed off entirely.
+      // Role, ban and session changes go through features/admin/lib/actions.ts.
+      if (ctx.path.startsWith("/admin/")) {
+        throw new APIError("FORBIDDEN", { message: "Not available." });
+      }
       if (ctx.path === "/sign-up/email" || ctx.path === "/sign-in/email") {
         rejectDisallowedEmail(ctx.body?.email as string | undefined);
       }
@@ -110,7 +119,19 @@ export const auth = betterAuth({
       },
     },
   },
-  plugins: [nextCookies()],
+  plugins: [
+    // Adds role/banned columns, assigns the default role on sign-up and
+    // refuses new sessions for banned users.
+    admin({
+      ac,
+      roles,
+      defaultRole: DEFAULT_ROLE,
+      adminRoles: ["admin"],
+      bannedUserMessage:
+        "Your Peeerly account has been suspended. Contact a coordinator if you think this is a mistake.",
+    }),
+    nextCookies(),
+  ],
   onAPIError: {
     errorURL: "/auth/login",
   },

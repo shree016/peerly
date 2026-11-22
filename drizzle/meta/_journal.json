@@ -22,6 +22,27 @@
       "when": 1794940832101,
       "tag": "0002_quiz_course_materials",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795281560997,
+      "tag": "0003_rbac_and_polls",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795285680638,
+      "tag": "0004_migrate_coordinators_to_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795285939482,
+      "tag": "0005_drop_legacy_coordinator_columns",
+      "breakpoints": true
     }
   ]
 }

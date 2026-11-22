@@ -1,8 +1,8 @@
+import { userCan } from "@/lib/permissions/server";
+
 import { getUser } from "@/actions/user";
 
 import type { User } from "@/types";
-
-import { isQuizAdminEmail } from "./admins";
 
 export class QuizApiError extends Error {
   constructor(
@@ -16,12 +16,14 @@ export class QuizApiError extends Error {
   }
 }
 
+/** Quiz management is gated by the `quiz:manage` permission (activity
+ * coordinators and admins — see lib/permissions/roles.ts). */
 export async function requireAdmin(): Promise<User> {
   const user = await getUser();
-  if (!user) {
+  if (!user || user.banned) {
     throw new QuizApiError("UNAUTHORIZED", "Authentication required.", 401);
   }
-  if (!isQuizAdminEmail(user.email)) {
+  if (!userCan(user, "quiz:manage")) {
     throw new QuizApiError(
       "FORBIDDEN",
       "Only activity coordinators can manage quizzes.",
@@ -31,8 +33,10 @@ export async function requireAdmin(): Promise<User> {
   return user;
 }
 
-export function canManageQuiz(email: string | null | undefined): boolean {
-  return isQuizAdminEmail(email);
+export function canManageQuiz(
+  user: Pick<User, "role" | "email"> | null | undefined,
+): boolean {
+  return userCan(user, "quiz:manage");
 }
 
 export function isQuizApiError(error: unknown): error is QuizApiError {

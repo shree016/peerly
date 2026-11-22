@@ -13,6 +13,8 @@
     "format:check": "prettier --check .",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "roles:bootstrap": "npx tsx scripts/bootstrap-roles.ts",
+    "test:polls": "npx tsx scripts/test-polls-rbac-logic.ts",
     "test:quiz-rag": "npx tsx scripts/test-quiz-rag-logic.ts"
   },
   "dependencies": {
@@ -74,6 +76,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "baseline-browser-mapping": "^2.11.39",
     "drizzle-kit": "^0.31.7",
     "eslint": "^9",
     "eslint-config-next": "16.0.0",
