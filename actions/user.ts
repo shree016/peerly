@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 
 import { eq } from "drizzle-orm";
 
+import { socialUrl } from "@/features/profile/lib/social-links";
 import { editProfileSchema } from "@/features/profile/lib/validation";
 
 import { auth } from "@/lib/auth";
@@ -100,7 +101,6 @@ export async function updateUserProfile(data: {
   github?: string;
   twitter?: string;
   linkedin?: string;
-  peerlist?: string;
   portfolio?: string;
 }) {
   try {
@@ -128,7 +128,7 @@ export async function updateUserProfile(data: {
       nextImage &&
       normalizeProfileImageUrl(previousImage) !== normalizeProfileImageUrl(nextImage)
     ) {
-      await deleteStoredProfileImage(previousImage);
+      await deleteStoredProfileImage(previousImage, session.user.id);
     }
 
     // Update user profile
@@ -138,10 +138,9 @@ export async function updateUserProfile(data: {
         name: data.name.trim(),
         bio: data.bio?.trim() || null,
         image: data.image || null,
-        github: data.github?.trim() || null,
-        twitter: data.twitter?.trim() || null,
-        linkedin: data.linkedin?.trim() || null,
-        peerlist: data.peerlist?.trim() || null,
+        github: socialUrl("github", data.github) || null,
+        twitter: socialUrl("twitter", data.twitter) || null,
+        linkedin: socialUrl("linkedin", data.linkedin) || null,
         portfolio: data.portfolio?.trim() || null,
       })
       .where(eq(user.id, session.user.id));

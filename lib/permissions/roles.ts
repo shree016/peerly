@@ -25,7 +25,7 @@ export const statements = {
   poll: ["respond", "manage", "export"],
   roster: ["read", "write", "export"],
   quiz: ["manage"],
-  experience: ["verify", "moderate"],
+  experience: ["verify", "moderate", "templates"],
   access: ["manage-roles", "ban", "revoke-sessions"],
   audit: ["read"],
 } as const;
@@ -64,7 +64,7 @@ const faculty = ac.newRole({
 const placementCoordinator = ac.newRole({
   poll: ["respond", "manage"],
   roster: ["read", "write"],
-  experience: ["verify", "moderate"],
+  experience: ["verify", "moderate", "templates"],
 });
 
 const activityCoordinator = ac.newRole({
@@ -97,7 +97,7 @@ export const ROLE_DESCRIPTIONS: Record<RoleName, string> = {
   student: "Responds to polls, plays quizzes, shares experiences.",
   faculty: "Manages polls and the student roster, including exports.",
   placement_coordinator:
-    "Moderates placement experiences, manages polls, views and edits the roster.",
+    "Moderates placement experiences, manages drive templates and polls, views and edits the roster.",
   activity_coordinator: "Runs quizzes, manages polls, views the roster.",
   admin: "Everything, plus deciding who holds which role.",
 };

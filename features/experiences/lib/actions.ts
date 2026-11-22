@@ -1,13 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-import { asc, count, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { asc, count, desc, eq, or, sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 import { sendEmail } from "@/lib/email";
 import {
-  deleteS3ObjectByUrl,
-  experienceUploadKeyFromUrl,
+  deletableExperienceKeyFromUrl,
+  deleteS3ObjectByKey,
   isS3Configured,
 } from "@/lib/s3/storage";
 
@@ -17,12 +19,14 @@ import { userCan } from "@/lib/permissions/server";
 
 import db from "@/db";
 import {
+  experienceTemplate,
   interviewExperience,
   interviewExperienceComment,
   interviewExperienceResource,
   interviewExperienceRound,
 } from "@/db/schema";
 
+import { loadTemplatesForStudents } from "./templates";
 import {
   CommentWithAuthor,
   ExperienceListItem,
@@ -33,20 +37,27 @@ import {
   CreateExperienceInput,
   PostCommentInput,
   RoundOutcome,
-  RoundType,
   UpdateExperienceInput,
-  difficultyOptions,
   roundOutcomeOptions,
-  roundTypeOptions,
 } from "./validation";
 
 const knownOutcomes = new Set<string>(roundOutcomeOptions);
-const knownRoundTypes = new Set<string>(roundTypeOptions);
-const knownDifficulties = new Set<string>(difficultyOptions);
 
 /** Legacy rounds predate the outcome column, so anything unknown reads as null. */
 function normalizeOutcome(value: string | null): RoundOutcome | null {
   return value && knownOutcomes.has(value) ? (value as RoundOutcome) : null;
+}
+
+/**
+ * The gate for reading experiences. It has to live here, next to the data: a
+ * layout check is skipped on client-side navigation and renders in parallel
+ * with the page, and every export in this file is callable as a server action.
+ */
+async function requireExperienceReader() {
+  const currentUser = await getUser();
+  if (!currentUser || currentUser.banned) {
+    redirect("/auth/login?callbackUrl=/experiences");
+  }
 }
 
 export async function createExperience(data: CreateExperienceInput) {
@@ -103,13 +114,16 @@ export async function createExperience(data: CreateExperienceInput) {
 
 /**
  * Templates let several writeups point at the same uploaded logo or JD, so an
- * upload is only safe to delete once no experience references it any more.
+ * upload is only safe to delete once no experience, resource or drive template
+ * references it any more. Matches on the object key, because that is what gets
+ * deleted: different URLs (query string, host, scheme) can name the same key.
  * Callers must run this after their own row changes are written.
  */
-async function findReferencedUploadUrls(urls: string[]) {
-  if (urls.length === 0) return new Set<string>();
+async function findReferencedUploadKeys(keys: string[]) {
+  const containsAnyKey = (column: AnyPgColumn) =>
+    or(...keys.map((key) => sql`strpos(${column}, ${key}) > 0`));
 
-  const [experienceRefs, resourceRefs] = await Promise.all([
+  const [experienceRefs, resourceRefs, templateRefs] = await Promise.all([
     db
       .select({
         jdUrl: interviewExperience.jdUrl,
@@ -118,21 +132,35 @@ async function findReferencedUploadUrls(urls: string[]) {
       .from(interviewExperience)
       .where(
         or(
-          inArray(interviewExperience.jdUrl, urls),
-          inArray(interviewExperience.companyLogoUrl, urls),
+          containsAnyKey(interviewExperience.jdUrl),
+          containsAnyKey(interviewExperience.companyLogoUrl),
         ),
       ),
     db
       .select({ content: interviewExperienceResource.content })
       .from(interviewExperienceResource)
-      .where(inArray(interviewExperienceResource.content, urls)),
+      .where(containsAnyKey(interviewExperienceResource.content)),
+    db
+      .select({
+        jdUrl: experienceTemplate.jdUrl,
+        companyLogoUrl: experienceTemplate.companyLogoUrl,
+      })
+      .from(experienceTemplate)
+      .where(
+        or(
+          containsAnyKey(experienceTemplate.jdUrl),
+          containsAnyKey(experienceTemplate.companyLogoUrl),
+        ),
+      ),
   ]);
 
+  const references = [
+    ...experienceRefs.flatMap((r) => [r.jdUrl, r.companyLogoUrl]),
+    ...resourceRefs.map((r) => r.content),
+    ...templateRefs.flatMap((r) => [r.jdUrl, r.companyLogoUrl]),
+  ];
   return new Set(
-    [
-      ...experienceRefs.flatMap((r) => [r.jdUrl, r.companyLogoUrl]),
-      ...resourceRefs.map((r) => r.content),
-    ].filter((url): url is string => Boolean(url)),
+    keys.filter((key) => references.some((ref) => ref?.includes(key))),
   );
 }
 
@@ -142,22 +170,24 @@ async function deleteRemovedExperienceUploads(
 ) {
   if (!isS3Configured()) return;
 
-  const nextSet = new Set(nextUrls.filter(Boolean));
+  const toKeys = (urls: string[]) =>
+    urls
+      .map(deletableExperienceKeyFromUrl)
+      .filter((key): key is string => key !== null);
+
+  const kept = new Set(toKeys(nextUrls));
   const candidates = [
-    ...new Set(previousUrls.filter((url) => url && !nextSet.has(url))),
+    ...new Set(toKeys(previousUrls).filter((key) => !kept.has(key))),
   ];
   if (candidates.length === 0) return;
 
-  const stillReferenced = await findReferencedUploadUrls(candidates);
-  const removed = candidates.filter((url) => !stillReferenced.has(url));
-
-  if (removed.length === 0) return;
+  const stillReferenced = await findReferencedUploadKeys(candidates);
+  const removed = candidates.filter((key) => !stillReferenced.has(key));
 
   await Promise.all(
-    removed.map(async (url) => {
-      if (!experienceUploadKeyFromUrl(url)) return;
+    removed.map(async (key) => {
       try {
-        await deleteS3ObjectByUrl(url);
+        await deleteS3ObjectByKey(key);
       } catch (error) {
         console.error("Failed to delete experience upload from S3:", error);
       }
@@ -263,6 +293,8 @@ export async function updateExperience(data: UpdateExperienceInput) {
 }
 
 export async function getAllExperiences(): Promise<ExperienceListItem[]> {
+  await requireExperienceReader();
+
   const [rows, roundRows, resourceCounts, commentCounts] = await Promise.all([
     db
       .select()
@@ -365,6 +397,8 @@ export async function getExperienceStats() {
 export async function getExperience(
   id: string,
 ): Promise<ExperienceWithAuthor | null> {
+  await requireExperienceReader();
+
   const experience = await db.query.interviewExperience.findFirst({
     where: eq(interviewExperience.id, id),
     with: {
@@ -413,89 +447,18 @@ export async function deleteExperience(id: string) {
  * another person's result, overview or questions.
  */
 export async function getExperienceTemplates(): Promise<ExperienceTemplate[]> {
-  const currentUser = await getUser();
-  if (!currentUser) throw new Error("Unauthorized");
+  await requireExperienceReader();
 
-  const rows = await db.query.interviewExperience.findMany({
-    where: eq(interviewExperience.isPublished, true),
-    orderBy: (e) => [desc(e.createdAt)],
-    columns: {
-      id: true,
-      companyName: true,
-      companyLogoUrl: true,
-      role: true,
-      batch: true,
-      ctcLpa: true,
-      jdUrl: true,
-      jdFileName: true,
-      createdAt: true,
-    },
-    with: {
-      rounds: {
-        orderBy: (r) => [asc(r.roundNumber)],
-        columns: { roundType: true, difficulty: true },
-      },
-    },
-  });
-
-  const templates = new Map<string, ExperienceTemplate>();
-
-  // Rows arrive newest first, so the first non-empty value seen for a field is
-  // the most recent one anyone recorded for that drive.
-  for (const row of rows) {
-    const key = [row.companyName, row.role, row.batch]
-      .map((part) => part.trim().toLowerCase())
-      .join("|");
-
-    const rounds = row.rounds
-      .filter((r) => knownRoundTypes.has(r.roundType))
-      .map((r) => ({
-        roundType: r.roundType as RoundType,
-        difficulty:
-          r.difficulty && knownDifficulties.has(r.difficulty)
-            ? (r.difficulty as ExperienceTemplate["rounds"][number]["difficulty"])
-            : undefined,
-      }));
-
-    const existing = templates.get(key);
-    if (!existing) {
-      templates.set(key, {
-        key,
-        companyName: row.companyName.trim(),
-        companyLogoUrl: row.companyLogoUrl,
-        role: row.role.trim(),
-        batch: row.batch.trim(),
-        ctcLpa: row.ctcLpa,
-        jd: row.jdUrl
-          ? { url: row.jdUrl, fileName: row.jdFileName ?? "Job description" }
-          : null,
-        rounds,
-        postCount: 1,
-        lastSharedAt: row.createdAt,
-      });
-      continue;
-    }
-
-    existing.postCount += 1;
-    existing.companyLogoUrl ??= row.companyLogoUrl;
-    existing.ctcLpa ??= row.ctcLpa;
-    if (!existing.jd && row.jdUrl) {
-      existing.jd = {
-        url: row.jdUrl,
-        fileName: row.jdFileName ?? "Job description",
-      };
-    }
-    // Someone rejected early only saw part of the process; the longest round
-    // list is the closest to the drive's full structure.
-    if (rounds.length > existing.rounds.length) existing.rounds = rounds;
-  }
-
-  return [...templates.values()];
+  // Official (coordinator-made) templates first, then ones derived from
+  // students' posts — see ./templates.ts.
+  return loadTemplatesForStudents();
 }
 
 export async function getComments(
   experienceId: string,
 ): Promise<CommentWithAuthor[]> {
+  await requireExperienceReader();
+
   return db.query.interviewExperienceComment.findMany({
     where: eq(interviewExperienceComment.experienceId, experienceId),
     orderBy: (c) => [asc(c.createdAt)],

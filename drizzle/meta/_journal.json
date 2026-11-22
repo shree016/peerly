@@ -43,6 +43,13 @@
       "when": 1795285939482,
       "tag": "0005_drop_legacy_coordinator_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795331339194,
+      "tag": "0006_experience_templates",
+      "breakpoints": true
     }
   ]
 }

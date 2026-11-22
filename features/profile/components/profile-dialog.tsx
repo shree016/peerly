@@ -35,12 +35,12 @@ import {
   LinkedIn,
   Loader,
   NoImage,
-  PeerList,
   X as Twitter,
 } from "@/components/icons";
 import { resolveProfileImageSrc } from "@/lib/s3/image-url";
 import { User } from "@/types";
 
+import { socialUrl, socialUsername } from "../lib/social-links";
 import { EditProfile } from "../lib/types";
 import { getInitials } from "../lib/utils";
 import { editProfileSchema } from "../lib/validation";
@@ -123,15 +123,23 @@ export function ProfileDialog({
       name: user.name ?? "",
       bio: user.bio ?? "",
       image: user.image ?? "",
-      github: user.github ?? "",
-      twitter: user.twitter ?? "",
-      linkedin: user.linkedin ?? "",
-      peerlist: user.peerlist ?? "",
+      // Stored as full links; the boxes already show the domain as a prefix.
+      github: socialUsername("github", user.github) ?? "",
+      twitter: socialUsername("twitter", user.twitter) ?? "",
+      linkedin: socialUsername("linkedin", user.linkedin) ?? "",
       portfolio: user.portfolio ?? "",
     } as EditProfile,
     validators: { onSubmit: editProfileSchema },
     onSubmit: async ({ value }) => {
-      mutation.mutateAsync({ value });
+      mutation.mutateAsync({
+        // Send full links, so the cached user matches what gets stored.
+        value: {
+          ...value,
+          github: socialUrl("github", value.github),
+          twitter: socialUrl("twitter", value.twitter),
+          linkedin: socialUrl("linkedin", value.linkedin),
+        },
+      });
     },
   });
 
@@ -290,7 +298,7 @@ export function ProfileDialog({
 
           {/* ---- Social Links (looped) ---- */}
           {(
-            ["github", "twitter", "linkedin", "peerlist", "portfolio"] as const
+            ["github", "twitter", "linkedin", "portfolio"] as const
           ).map((key) => {
             const Icon =
               key === "github"
@@ -299,9 +307,7 @@ export function ProfileDialog({
                   ? Twitter
                   : key === "linkedin"
                     ? LinkedIn
-                    : key === "peerlist"
-                      ? PeerList
-                      : Globe;
+                    : Globe;
 
             const prefix =
               key === "github"
@@ -310,9 +316,7 @@ export function ProfileDialog({
                   ? "x.com/"
                   : key === "linkedin"
                     ? "linkedin.com/in/"
-                    : key === "peerlist"
-                      ? "peerlist.io/"
-                      : null;
+                    : null;
 
             const placeholder =
               key === "github"
@@ -321,9 +325,7 @@ export function ProfileDialog({
                   ? "username"
                   : key === "linkedin"
                     ? "username"
-                    : key === "peerlist"
-                      ? "username"
-                      : "https://rathore-abhishek.vercel.app";
+                    : "https://yourname.dev";
 
             return (
               <form.Field key={key} name={key}>
@@ -350,7 +352,7 @@ export function ProfileDialog({
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         placeholder={placeholder}
-                        maxLength={key === "portfolio" ? 200 : 100}
+                        maxLength={200}
                       />
                     </InputGroup>
                     {field.state.meta.isTouched &&

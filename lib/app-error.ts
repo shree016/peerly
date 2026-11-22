@@ -24,6 +24,22 @@ export interface AppErrorBody {
   field?: string;
 }
 
+// Detected by shape rather than `instanceof`: client components import this
+// file, and importing zod here would put it back into every page's bundle.
+function validationErrorBody(error: unknown): AppErrorBody | null {
+  if (!(error instanceof Error) || error.name !== "ZodError") return null;
+  const issue = (
+    error as Error & { issues?: { message: string; path: PropertyKey[] }[] }
+  ).issues?.[0];
+  if (!issue) return null;
+  const field = issue.path.map(String).join(".");
+  return {
+    code: "VALIDATION_ERROR",
+    message: issue.message,
+    ...(field ? { field } : {}),
+  };
+}
+
 export function appErrorBody(error: AppError): { error: AppErrorBody } {
   return {
     error: {
@@ -48,6 +64,8 @@ export async function runAction<T>(
     return { ok: true, data: await fn() };
   } catch (error) {
     if (isAppError(error)) return { ok: false, ...appErrorBody(error) };
+    const invalid = validationErrorBody(error);
+    if (invalid) return { ok: false, error: invalid };
     console.error("Unexpected server action error:", error);
     return {
       ok: false,

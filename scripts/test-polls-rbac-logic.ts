@@ -45,6 +45,7 @@ const ALL: Permission[] = [
   "quiz:manage",
   "experience:verify",
   "experience:moderate",
+  "experience:templates",
   "access:manage-roles",
   "access:ban",
   "access:revoke-sessions",
@@ -68,6 +69,7 @@ const EXPECTED: Record<RoleName, Permission[]> = {
     "roster:write",
     "experience:verify",
     "experience:moderate",
+    "experience:templates",
   ],
   activity_coordinator: [
     "poll:respond",

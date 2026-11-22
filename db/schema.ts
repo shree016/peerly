@@ -1241,3 +1241,59 @@ export const pollCollaboratorRelations = relations(
     }),
   }),
 );
+
+// ════════════════════════════════════════════════════════════════════════════
+// Official drive templates — created by placement coordinators so students
+// sharing an experience start from accurate company / role / batch / CTC / JD
+// and round structure, even before anyone from the drive has posted.
+// ════════════════════════════════════════════════════════════════════════════
+
+export type DriveTemplateRound = {
+  roundType: string; // one of roundTypeOptions
+  difficulty: string | null; // "Easy" | "Medium" | "Hard" | null
+};
+
+export const experienceTemplate = pgTable(
+  "experience_template",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    companyName: text("company_name").notNull(),
+    companyLogoUrl: text("company_logo_url"),
+    role: text("role").notNull(),
+    batch: text("batch").notNull(),
+    ctcLpa: real("ctc_lpa"),
+    jdUrl: text("jd_url"),
+    jdFileName: text("jd_file_name"),
+    rounds: jsonb("rounds").$type<DriveTemplateRound[]>().notNull().default([]),
+    status: text("status").notNull().default("active"), // 'active' | 'archived'
+    createdBy: text("created_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    updatedBy: text("updated_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    // One active template per drive (company + role + batch, case-insensitive).
+    uniqueIndex("experience_template_drive_active_unique")
+      .on(sql`lower(${t.companyName})`, sql`lower(${t.role})`, sql`lower(${t.batch})`)
+      .where(sql`${t.status} = 'active'`),
+  ],
+);
+
+export const experienceTemplateRelations = relations(
+  experienceTemplate,
+  ({ one }) => ({
+    creator: one(user, {
+      fields: [experienceTemplate.createdBy],
+      references: [user.id],
+    }),
+  }),
+);

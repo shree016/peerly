@@ -66,6 +66,7 @@ const ALL_PERMISSIONS: Permission[] = [
   "quiz:manage",
   "experience:verify",
   "experience:moderate",
+  "experience:templates",
   "access:manage-roles",
   "access:ban",
   "access:revoke-sessions",

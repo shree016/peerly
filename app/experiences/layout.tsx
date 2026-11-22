@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import { getUser } from "@/actions/user";
 
 /**
- * Real session check for every /experiences page. The proxy only checks that
- * a session cookie is *present*, so without this an expired, revoked or fake
- * cookie could read experiences (and /experiences/new crashed with a 500).
+ * Sends visitors without a valid session to login. NOT the security boundary:
+ * Next skips layouts on client-side navigation and renders them in parallel
+ * with the page. The data is protected by `requireExperienceReader` in
+ * features/experiences/lib/actions.ts.
  */
 export default async function ExperiencesLayout({
   children,

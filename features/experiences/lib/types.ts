@@ -31,6 +31,13 @@ export type ExperienceListItem = InterviewExperience & {
 /** Drive-level details reusable by anyone else writing up the same drive. */
 export type ExperienceTemplate = {
   key: string;
+  /**
+   * "official" — created by a placement coordinator (accurate, available
+   * before anyone posts). "community" — derived from students' posts.
+   */
+  source: "official" | "community";
+  /** Official templates only: the template row id. */
+  templateId?: string;
   companyName: string;
   companyLogoUrl: string | null;
   role: string;
@@ -41,6 +48,16 @@ export type ExperienceTemplate = {
     roundType: RoundType;
     difficulty: (typeof difficultyOptions)[number] | undefined;
   }[];
+  /** Published experiences for this drive (0 for a brand-new official template). */
   postCount: number;
-  lastSharedAt: Date;
+  lastSharedAt: Date | null;
+};
+
+/** An official template as shown on the coordinator's management page. */
+export type ManagedDriveTemplate = ExperienceTemplate & {
+  source: "official";
+  templateId: string;
+  status: "active" | "archived";
+  createdByName: string | null;
+  updatedAt: Date;
 };

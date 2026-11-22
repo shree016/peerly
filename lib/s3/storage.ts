@@ -327,6 +327,30 @@ export function experienceDocumentKeyFromUrl(url: string): string | null {
   return key && isExperienceDocumentKey(key) ? key : null;
 }
 
+const GENERATED_EXPERIENCE_KEY =
+  /^profiles\/experiences\/(documents|logos)\/[a-z0-9-]+\.[a-z0-9]+$/i;
+
+/**
+ * The key of an experience upload that is safe to delete once unreferenced.
+ * Only keys shaped like the ones we generate qualify (no nesting, "..", "#").
+ */
+export function deletableExperienceKeyFromUrl(url: string): string | null {
+  const key = extractS3KeyFromUrl(url);
+  return key && GENERATED_EXPERIENCE_KEY.test(key) ? key : null;
+}
+
+/** True only for a URL exactly as our upload routes return it. */
+export function isExperienceUploadUrl(
+  url: string,
+  kind: "documents" | "logos",
+): boolean {
+  const key = deletableExperienceKeyFromUrl(url);
+  return (
+    !!key?.startsWith(`${EXPERIENCE_PREFIX}${kind}/`) &&
+    url === buildS3PublicUrl(key)
+  );
+}
+
 export async function uploadDocumentBuffer(params: {
   key: string;
   body: Buffer;

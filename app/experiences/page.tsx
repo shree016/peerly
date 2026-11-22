@@ -1,4 +1,6 @@
-import { BriefcaseBusiness, PenLine } from "lucide-react";
+import Link from "next/link";
+
+import { BriefcaseBusiness, LayoutTemplate, PenLine } from "lucide-react";
 
 import { CtaPill } from "@/components/common/cta-pill";
 
@@ -8,6 +10,10 @@ import {
   getAllExperiences,
   getExperienceStats,
 } from "@/features/experiences/lib/actions";
+
+import { userCan } from "@/lib/permissions/server";
+
+import { getUser } from "@/actions/user";
 
 export const dynamic = "force-dynamic";
 
@@ -26,11 +32,13 @@ export default async function ExperiencesPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  const [{ q }, experiences, stats] = await Promise.all([
+  const [{ q }, experiences, stats, currentUser] = await Promise.all([
     searchParams,
     getAllExperiences(),
     getExperienceStats(),
+    getUser(),
   ]);
+  const canManageTemplates = userCan(currentUser, "experience:templates");
 
   const statTiles = [
     { value: stats.experienceCount, label: "Experiences", emoji: "📝" },
@@ -59,6 +67,14 @@ export default async function ExperiencesPage({
             label="Share your experience"
             icon={PenLine}
           />
+          {canManageTemplates && (
+            <Link
+              href="/experiences/templates"
+              className="peeerly-chip bg-card border px-4 py-2.5 text-sm font-semibold shadow-sm"
+            >
+              <LayoutTemplate className="size-4" /> Drive templates
+            </Link>
+          )}
         </div>
         <span
           aria-hidden

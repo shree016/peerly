@@ -1,5 +1,15 @@
 import z from "zod";
 
+import { type SocialNetwork, socialUsername } from "./social-links";
+
+const socialLink = (network: SocialNetwork, label: string) =>
+  z
+    .string()
+    .refine((value) => !value.trim() || socialUsername(network, value), {
+      message: `Enter your ${label} username or profile link`,
+    })
+    .optional();
+
 export const editProfileSchema = z.object({
   name: z
     .string()
@@ -7,10 +17,9 @@ export const editProfileSchema = z.object({
     .max(50, "Name must be at most 50 characters long"),
   bio: z.string().max(500, "Bio must be at most 500 characters long"),
   image: z.url().optional().or(z.literal("")),
-  github: z.string().url("Invalid GitHub URL").optional().or(z.literal("")),
-  twitter: z.string().url("Invalid Twitter URL").optional().or(z.literal("")),
-  linkedin: z.string().url("Invalid LinkedIn URL").optional().or(z.literal("")),
-  peerlist: z.string().url("Invalid Peerlist URL").optional().or(z.literal("")),
+  github: socialLink("github", "GitHub"),
+  twitter: socialLink("twitter", "Twitter"),
+  linkedin: socialLink("linkedin", "LinkedIn"),
   portfolio: z
     .string()
     .url("Invalid Portfolio URL")

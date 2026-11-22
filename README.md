@@ -52,7 +52,7 @@ Code checks **permissions** (e.g. `poll:manage`), never role names. Which role h
 | --- | --- | --- | --- |
 | `student` (default) | respond | – | – |
 | `faculty` | manage + export | view, edit, export | – |
-| `placement_coordinator` | manage | view, edit | verify/moderate experiences |
+| `placement_coordinator` | manage | view, edit | verify/moderate experiences, official drive templates |
 | `activity_coordinator` | manage | view | quizzes |
 | `admin` | everything | everything | roles, suspensions, audit log |
 
