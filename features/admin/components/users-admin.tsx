@@ -30,7 +30,7 @@ import {
   ROLE_NAMES,
   type RoleName,
 } from "@/lib/permissions/roles";
-import { resolveProfileImageSrc } from "@/lib/s3/profile-image";
+import { resolveProfileImageSrc } from "@/lib/s3/image-url";
 import { cn } from "@/lib/utils";
 
 import {

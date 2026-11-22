@@ -4,6 +4,8 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 
+import { withProfileImageVersion } from "./image-url";
+
 const MAX_PROFILE_IMAGE_BYTES = 4 * 1024 * 1024;
 
 function getS3Config() {
@@ -56,45 +58,12 @@ export function buildProfileImageUrl(key: string): string {
   return `${getS3PublicBaseUrl()}/${key}`;
 }
 
-export function normalizeProfileImageUrl(url: string): string {
-  try {
-    const parsed = new URL(url);
-    parsed.search = "";
-    parsed.hash = "";
-    return parsed.toString();
-  } catch {
-    return url.split("?")[0]?.split("#")[0] ?? url;
-  }
-}
-
-export function withProfileImageVersion(
-  url: string,
-  version: number | string = Date.now(),
-): string {
-  const base = normalizeProfileImageUrl(url);
-  return `${base}?v=${version}`;
-}
-
-export function resolveProfileImageSrc(
-  url: string | null | undefined,
-  updatedAt?: Date | string | null,
-): string {
-  if (!url) return "";
-  if (url.startsWith("blob:")) return url;
-  if (/[?&]v=/.test(url)) return url;
-
-  if (updatedAt) {
-    const ts =
-      updatedAt instanceof Date
-        ? updatedAt.getTime()
-        : new Date(updatedAt).getTime();
-    if (!Number.isNaN(ts)) {
-      return withProfileImageVersion(url, ts);
-    }
-  }
-
-  return url;
-}
+// Pure URL helpers live in ./image-url (client-safe, no AWS SDK).
+export {
+  normalizeProfileImageUrl,
+  resolveProfileImageSrc,
+  withProfileImageVersion,
+} from "./image-url";
 
 export function isS3ProfileImageUrl(url: string): boolean {
   if (!url) return false;

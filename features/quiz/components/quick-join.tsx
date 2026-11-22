@@ -28,6 +28,7 @@ export function QuickJoin({ className }: { className?: string }) {
       return;
     }
     setLoading(true);
+    let navigating = false; // keep the busy state while the next page loads
     try {
       const res = await fetch(
         `/api/quiz/v1/sessions/by-join-code?code=${encodeURIComponent(trimmed)}`,
@@ -40,11 +41,12 @@ export function QuickJoin({ className }: { className?: string }) {
         );
         return;
       }
+      navigating = true;
       router.push(`/quiz/join/${trimmed}`);
     } catch {
       toast.error("Network error. Check your connection.");
     } finally {
-      setLoading(false);
+      if (!navigating) setLoading(false);
     }
   }
 

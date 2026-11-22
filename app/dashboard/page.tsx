@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 
@@ -63,7 +64,10 @@ function rankCompanies(experiences: ExperienceListItem[]): CompanyRank[] {
 }
 
 export default async function DashboardPage() {
-  const user = (await getUser())!; // layout guarantees a signed-in user
+  // The layout also redirects, but it renders in parallel with this page, so
+  // an expired/revoked session would otherwise crash here on `null.id`.
+  const user = await getUser();
+  if (!user) redirect("/auth/login?callbackUrl=/dashboard");
   const isQuizAdmin = canManageQuiz(user);
 
   let experiences: ExperienceListItem[] = [];

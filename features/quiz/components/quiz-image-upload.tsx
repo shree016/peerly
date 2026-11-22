@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
-import { resolveQuizMediaSrc } from "@/lib/s3/storage";
+import { resolveQuizMediaSrc } from "@/lib/s3/image-url";
 
 interface QuizImageUploadProps {
   value: string | null;

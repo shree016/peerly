@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -13,9 +14,17 @@ import { getUser } from "@/actions/user";
 
 export const dynamic = "force-dynamic";
 
+// Landing-page counters change slowly — cache them for 5 minutes so most
+// visits don't hit (and possibly wake) the database at all.
+const getCachedExperienceStats = unstable_cache(
+  () => getExperienceStats(),
+  ["landing-experience-stats"],
+  { revalidate: 300 },
+);
+
 async function safeStats() {
   try {
-    return await getExperienceStats();
+    return await getCachedExperienceStats();
   } catch {
     return null;
   }

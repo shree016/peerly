@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import { resolveQuizMediaSrc } from "@/lib/s3/storage";
+import { resolveQuizMediaSrc } from "@/lib/s3/image-url";
 
 import { cn } from "@/lib/utils";
 

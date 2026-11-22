@@ -32,6 +32,7 @@ export default function JoinPage() {
     }
 
     setLoading(true)
+    let navigating = false // keep the busy state while the next page loads
     try {
       const res = await fetch(
         `/api/quiz/v1/sessions/by-join-code?code=${encodeURIComponent(trimmed)}`
@@ -51,13 +52,14 @@ export default function JoinPage() {
       }
 
       // Redirect to the name/avatar selection page
+      navigating = true
       router.push(`/quiz/join/${trimmed}`)
     } catch {
       const msg = "Network error. Please check your connection and try again."
       setError(msg)
       toast.error(msg)
     } finally {
-      setLoading(false)
+      if (!navigating) setLoading(false)
     }
   }
 

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import dynamic from "next/dynamic";
+
 import { useProgress, useRouter } from "@bprogress/next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldCheck } from "lucide-react";
@@ -16,16 +18,24 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 
-import { ProfileDialog } from "@/features/profile/components/profile-dialog";
-
 import { getMyAccess } from "@/actions/access";
 import { logout } from "@/actions/auth";
 
 import { Loader } from "@/components/icons";
-import { resolveProfileImageSrc } from "@/lib/s3/profile-image";
+import { resolveProfileImageSrc } from "@/lib/s3/image-url";
 import { User as UserType } from "@/types";
 
 import { Logout, User } from "../icons";
+
+// The profile editor (form library, zod, image dropzone) is only needed once
+// someone clicks "Profile", so it's split out of the bundle every page loads.
+const ProfileDialog = dynamic(
+  () =>
+    import("@/features/profile/components/profile-dialog").then(
+      (m) => m.ProfileDialog,
+    ),
+  { ssr: false },
+);
 
 interface UserMenuProps {
   user: UserType;
@@ -35,6 +45,9 @@ export function UserMenu({ user }: UserMenuProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [profileOpen, setProfileOpen] = useState(false);
+  // Mount the (lazy) dialog on first open and keep it mounted afterwards, so
+  // its close animation still plays.
+  const [profileMounted, setProfileMounted] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const { start, stop } = useProgress();
   const { data: access } = useQuery({
@@ -67,11 +80,13 @@ export function UserMenu({ user }: UserMenuProps) {
 
   return (
     <>
-      <ProfileDialog
-        open={profileOpen}
-        onOpenChange={setProfileOpen}
-        user={user}
-      />
+      {profileMounted && (
+        <ProfileDialog
+          open={profileOpen}
+          onOpenChange={setProfileOpen}
+          user={user}
+        />
+      )}
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -118,6 +133,7 @@ export function UserMenu({ user }: UserMenuProps) {
               onClick={() => {
                 start();
                 setPopoverOpen(false);
+                setProfileMounted(true);
                 setProfileOpen(true);
                 stop();
               }}

@@ -76,6 +76,7 @@ export default function JoinNamePage() {
     }
 
     setSubmitting(true)
+    let navigating = false // keep the busy state while the next page loads
     try {
       const existingToken = getQuizParticipantTokenForSession(sessionId)
 
@@ -123,13 +124,14 @@ export default function JoinNamePage() {
           ? `Rejoined as ${data.displayName}`
           : `Joined as ${data.displayName}`,
       )
+      navigating = true
       router.push(`/quiz/play/${sessionId}`)
     } catch {
       const msg = "Network error. Please check your connection and try again."
       setSubmitError(msg)
       toast.error(msg)
     } finally {
-      setSubmitting(false)
+      if (!navigating) setSubmitting(false)
     }
   }
 

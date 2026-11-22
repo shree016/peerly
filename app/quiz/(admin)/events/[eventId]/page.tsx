@@ -27,11 +27,17 @@ type PageProps = { params: Promise<{ eventId: string }> };
 export default async function QuizEventPage({ params }: PageProps) {
   const { eventId } = await params;
 
-  const eventRes = await quizApiFetch(`/events/${eventId}`);
+  // The three requests are independent — fetch them in parallel instead of
+  // one after another (each is a separate serverless call).
+  const [eventRes, questionsRes, sessionsRes] = await Promise.all([
+    quizApiFetch(`/events/${eventId}`),
+    quizApiFetch(`/events/${eventId}/questions`),
+    quizApiFetch(`/events/${eventId}/sessions`).catch(() => null),
+  ]);
+
   if (!eventRes.ok) notFound();
   const { event } = await eventRes.json();
 
-  const questionsRes = await quizApiFetch(`/events/${eventId}/questions`);
   const questionsBody = questionsRes.ok ? await questionsRes.json() : { questions: [] };
   const questionList = (questionsBody.questions ?? []) as Question[];
 
@@ -39,8 +45,7 @@ export default async function QuizEventPage({ params }: PageProps) {
   let endedSessions: { id: string; ended_at: string | null }[] = [];
 
   try {
-    const sessionsRes = await quizApiFetch(`/events/${eventId}/sessions`);
-    if (sessionsRes.ok) {
+    if (sessionsRes?.ok) {
       const sessionsData = await sessionsRes.json();
       const sessions = sessionsData.sessions ?? [];
       const active = sessions.find(

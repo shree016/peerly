@@ -38,7 +38,7 @@ import {
   PeerList,
   X as Twitter,
 } from "@/components/icons";
-import { resolveProfileImageSrc } from "@/lib/s3/profile-image";
+import { resolveProfileImageSrc } from "@/lib/s3/image-url";
 import { User } from "@/types";
 
 import { EditProfile } from "../lib/types";

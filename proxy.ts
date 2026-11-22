@@ -13,7 +13,7 @@ const PROTECTED_PREFIXES = [
 
 const QUIZ_PUBLIC_PREFIXES = ["/quiz/join", "/quiz/play"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/api/auth/error") {

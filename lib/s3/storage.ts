@@ -81,35 +81,8 @@ export function extractS3KeyFromUrl(url: string): string | null {
   }
 }
 
-const ALLOWED_MEDIA_PREFIXES = ["profiles/quiz/", "profiles/"] as const;
-
-export function isAllowedQuizMediaKey(key: string): boolean {
-  return ALLOWED_MEDIA_PREFIXES.some((prefix) => key.startsWith(prefix));
-}
-
-/** Client-safe: resolve a stored S3 URL to an in-app media proxy path. */
-export function resolveQuizMediaSrc(url: string | null | undefined): string {
-  if (!url?.trim()) return "";
-
-  const trimmed = url.trim();
-  if (trimmed.startsWith("/")) return trimmed;
-
-  try {
-    const parsed = new URL(trimmed);
-    const key = parsed.pathname.replace(/^\//, "").split("?")[0];
-    if (
-      key &&
-      isAllowedQuizMediaKey(key) &&
-      parsed.hostname.includes("amazonaws.com")
-    ) {
-      return `/api/quiz/v1/media?url=${encodeURIComponent(trimmed)}`;
-    }
-  } catch {
-    // Fall through to direct URL
-  }
-
-  return trimmed;
-}
+// Pure URL helpers live in ./image-url (client-safe, no AWS SDK).
+export { isAllowedQuizMediaKey, resolveQuizMediaSrc } from "./image-url";
 
 export async function getS3ObjectBuffer(key: string): Promise<{
   body: Buffer;

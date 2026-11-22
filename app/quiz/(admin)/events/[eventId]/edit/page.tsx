@@ -121,6 +121,7 @@ export default function EventEditPage() {
     }
 
     setSaving(true)
+    let navigating = false // keep the busy state while the next page loads
 
     try {
       const body: Record<string, unknown> = {
@@ -151,12 +152,13 @@ export default function EventEditPage() {
       // Return the user to the event page they came from, then refresh so the
       // server-rendered event page (and dashboard) re-fetch and show the newly
       // saved title, description, and theme instead of stale cached data.
+      navigating = true
       router.push(`/quiz/events/${eventId}`)
       router.refresh()
     } catch {
       toast.error("An unexpected error occurred. Please try again.")
     } finally {
-      setSaving(false)
+      if (!navigating) setSaving(false)
     }
   }
 

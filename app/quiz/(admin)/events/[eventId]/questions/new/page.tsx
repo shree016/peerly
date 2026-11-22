@@ -111,6 +111,7 @@ export default function NewQuestionPage() {
     if (!validate()) return
 
     setLoading(true)
+    let navigating = false // keep the busy state while the next page loads
     setErrors({})
 
     const payload = {
@@ -148,13 +149,14 @@ export default function NewQuestionPage() {
       }
 
       toast.success("Question added")
+      navigating = true
       router.push(`/quiz/events/${eventId}`)
     } catch {
       const msg = "An unexpected error occurred. Please try again."
       setErrors({ general: msg })
       toast.error(msg)
     } finally {
-      setLoading(false)
+      if (!navigating) setLoading(false)
     }
   }
 

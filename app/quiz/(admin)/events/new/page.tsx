@@ -61,6 +61,9 @@ export default function NewQuizEventPage() {
 
     setLoading(true);
     setErrors({});
+    // On success we navigate away: keep the "Creating…" state until the next
+    // page replaces this one instead of flashing back to an idle button.
+    let navigating = false;
 
     try {
       const res = await fetch("/api/quiz/v1/events", {
@@ -96,13 +99,14 @@ export default function NewQuizEventPage() {
       toast.success("Event created", {
         description: `"${body.event.title}" is ready to edit.`,
       });
+      navigating = true;
       router.push(`/quiz/events/${body.event.id}`);
     } catch {
       const msg = "An unexpected error occurred. Please try again.";
       setErrors({ general: msg });
       toast.error(msg);
     } finally {
-      setLoading(false);
+      if (!navigating) setLoading(false);
     }
   }
 

@@ -85,6 +85,7 @@ export default function AnalyticsPage() {
 
   const handleDelete = async () => {
     setDeleting(true)
+    let navigating = false // keep the busy state while the next page loads
     try {
       const res = await fetch(`/api/quiz/v1/analytics/${sessionId}`, { method: "DELETE" })
       if (!res.ok) {
@@ -94,11 +95,12 @@ export default function AnalyticsPage() {
       }
       toast.success("Session deleted")
       setDeleteConfirmOpen(false)
+      navigating = true
       router.push(`/quiz/events/${eventId}`)
     } catch {
       toast.error("An unexpected error occurred. Please try again.")
     } finally {
-      setDeleting(false)
+      if (!navigating) setDeleting(false)
     }
   }
 
