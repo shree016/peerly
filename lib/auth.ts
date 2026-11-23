@@ -6,6 +6,7 @@ import { admin } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 
 import { buildVerificationEmailHtml, sendEmail } from "@/lib/email";
+import { allowEmailSend } from "@/lib/email-send-limit";
 
 import db from "@/db";
 import { session as sessionTable, user as userTable } from "@/db/schema";
@@ -40,6 +41,12 @@ export const auth = betterAuth({
       await db.delete(sessionTable).where(eq(sessionTable.userId, user.id));
     },
     sendVerificationEmail: async ({ user, url }) => {
+      // Skipped quietly, so sign-up still answers the same way for every
+      // address. A link from the last hour is still valid.
+      if (!(await allowEmailSend("verify-email", user.email))) {
+        console.warn("Verification email skipped: hourly limit for this address.");
+        return;
+      }
       await sendEmail({
         to: user.email,
         subject: "Verify your email address",

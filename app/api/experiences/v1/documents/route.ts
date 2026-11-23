@@ -7,6 +7,8 @@ import {
   isS3Configured,
 } from "@/lib/s3/storage";
 
+import { getUser } from "@/actions/user";
+
 /**
  * Streams a stored JD or resource document back with a readable filename.
  * S3 keys are UUIDs, so hitting the bucket URL directly saves the file as
@@ -14,6 +16,14 @@ import {
  * sent inline so they preview in the browser; DOCX can only be downloaded.
  */
 export async function GET(request: NextRequest) {
+  // Experiences are members-only, so their documents are too.
+  if (!(await getUser())) {
+    return NextResponse.json(
+      { error: { code: "UNAUTHORIZED", message: "Sign in to open this document." } },
+      { status: 401 },
+    );
+  }
+
   const rawUrl = request.nextUrl.searchParams.get("url")?.trim();
   if (!rawUrl) {
     return NextResponse.json(

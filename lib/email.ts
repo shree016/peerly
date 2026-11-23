@@ -52,14 +52,25 @@ export async function sendEmail({
   return data;
 }
 
+/** Whoever signs up chooses the name, so it must not become HTML in someone's inbox. */
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function buildVerificationEmailHtml({
   name,
-  url,
+  url: rawUrl,
 }: {
   name?: string | null;
   url: string;
 }) {
-  const greeting = name?.trim() ? `Hi ${name.trim()},` : "Hi,";
+  const greeting = name?.trim() ? `Hi ${escapeHtml(name.trim())},` : "Hi,";
+  const url = escapeHtml(rawUrl);
 
   return `<!DOCTYPE html>
 <html lang="en">

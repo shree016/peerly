@@ -105,6 +105,14 @@ export const verification = pgTable("verification", {
     .$onUpdate(() => new Date()),
 });
 
+// Emails sent per address in the current window (lib/email-send-limit.ts).
+// In the database so every server instance sees the same count.
+export const emailSendLimit = pgTable("email_send_limit", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull(),
+  windowStart: timestamp("window_start", { mode: "date" }).notNull(),
+});
+
 
 // InterviewExperience Table (seniors sharing placement writeups — covers the
 // whole process: aptitude, OA, coding, interviews. Table names kept as
