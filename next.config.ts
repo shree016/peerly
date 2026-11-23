@@ -16,14 +16,8 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/quiz/**/*": ["./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-    ],
-  },
+  // No remote image hosts: every remote image is a plain <img> or unoptimized,
+  // and allowing "**" let anyone use our image optimizer as a free proxy.
   async redirects() {
     return [
       {
