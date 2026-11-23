@@ -57,13 +57,23 @@ export const roundOutcomeOptions = [
 
 export type RoundOutcome = (typeof roundOutcomeOptions)[number];
 
+/**
+ * Length caps for the free-text boxes. Generous because students can speak
+ * their answers (voice typing), and a few minutes of speech is long. The DB
+ * columns are unbounded text, so these can change without a migration.
+ */
+export const ROUND_DESCRIPTION_MAX = 6000;
+export const OVERVIEW_MAX = 8000;
+export const PREPARATION_MAX = 4000;
+export const COMMENT_MAX = 2000;
+
 export const experienceRoundSchema = z.object({
   roundNumber: z.number().min(1),
   roundType: z.enum(roundTypeOptions),
   description: z
     .string()
     .min(10, "Add a bit more detail about this round")
-    .max(2000),
+    .max(ROUND_DESCRIPTION_MAX, "A round description is too long"),
   difficulty: z.enum(difficultyOptions).optional(),
   outcome: z.enum(roundOutcomeOptions).optional(),
 });
@@ -97,7 +107,10 @@ export type ResourceInput = z.infer<typeof resourceSchema>;
 
 export const postCommentSchema = z.object({
   experienceId: z.string().min(1),
-  body: z.string().min(3, "Question is too short").max(1000),
+  body: z
+    .string()
+    .min(3, "Question is too short")
+    .max(COMMENT_MAX, "Question is too long"),
 });
 
 export type PostCommentInput = z.infer<typeof postCommentSchema>;
@@ -113,8 +126,11 @@ export const createExperienceSchema = z.object({
   overview: z
     .string()
     .min(20, "Share a bit more about your overall experience")
-    .max(4000),
-  preparationResources: z.string().max(2000).optional(),
+    .max(OVERVIEW_MAX, "Overall experience is too long"),
+  preparationResources: z
+    .string()
+    .max(PREPARATION_MAX, "Preparation resources are too long")
+    .optional(),
   jd: uploadedDocumentSchema.optional(),
   rounds: z.array(experienceRoundSchema).min(1, "Add at least one round"),
   resources: z.array(resourceSchema).max(20).default([]),

@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { deleteComment, postComment } from "../lib/actions";
 import { CommentWithAuthor } from "../lib/types";
 import { postCommentSchema } from "../lib/validation";
+import { appendSpokenText } from "../lib/voice/options";
+import { VoiceInputButton, useVoiceTypingBusy } from "./voice-input";
 
 export function ExperienceComments({
   experienceId,
@@ -30,6 +32,7 @@ export function ExperienceComments({
   const [comments, setComments] = useState(initialComments);
   const [body, setBody] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const voiceBusy = useVoiceTypingBusy();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -86,9 +89,21 @@ export function ExperienceComments({
             onChange={(e) => setBody(e.target.value)}
             disabled={isSubmitting}
           />
-          <Button type="submit" size="sm" disabled={isSubmitting || !body.trim()}>
-            {isSubmitting ? "Posting..." : "Post Question"}
-          </Button>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isSubmitting || voiceBusy || !body.trim()}
+            >
+              {isSubmitting ? "Posting..." : "Post Question"}
+            </Button>
+            <VoiceInputButton
+              id={`comment-${experienceId}`}
+              fieldLabel="your question"
+              onText={(text) => setBody((prev) => appendSpokenText(prev, text))}
+              disabled={isSubmitting}
+            />
+          </div>
         </form>
       ) : (
         <p className="text-muted-foreground text-sm">

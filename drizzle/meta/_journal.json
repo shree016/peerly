@@ -57,6 +57,13 @@
       "when": 1795450607660,
       "tag": "0007_email_send_limit",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795452832558,
+      "tag": "0008_voice_usage",
+      "breakpoints": true
     }
   ]
 }

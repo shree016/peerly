@@ -15,7 +15,8 @@
     "db:migrate": "drizzle-kit migrate",
     "roles:bootstrap": "npx tsx scripts/bootstrap-roles.ts",
     "test:polls": "npx tsx scripts/test-polls-rbac-logic.ts",
-    "test:quiz-rag": "npx tsx scripts/test-quiz-rag-logic.ts"
+    "test:quiz-rag": "npx tsx scripts/test-quiz-rag-logic.ts",
+    "test:voice": "npx tsx scripts/test-voice-logic.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1065.0",
