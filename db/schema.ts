@@ -113,15 +113,6 @@ export const emailSendLimit = pgTable("email_send_limit", {
   windowStart: timestamp("window_start", { mode: "date" }).notNull(),
 });
 
-// Seconds of speech converted to text per day (lib/voice-usage.ts). Keys are
-// "user:<userId>:<YYYY-MM-DD>" and "site:<YYYY-MM-DD>", India time. In the
-// database so every server instance sees the same count.
-export const voiceUsage = pgTable("voice_usage", {
-  key: text("key").primaryKey(),
-  seconds: integer("seconds").notNull(),
-  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
-});
-
 
 // InterviewExperience Table (seniors sharing placement writeups — covers the
 // whole process: aptitude, OA, coding, interviews. Table names kept as

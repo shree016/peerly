@@ -32,12 +32,8 @@ import {
   documentTypeFromFileName,
 } from "../lib/experience-form-input";
 import { ExperienceTemplate } from "../lib/types";
-import { appendSpokenText } from "../lib/voice/options";
 import {
   ExperienceRoundInput,
-  OVERVIEW_MAX,
-  PREPARATION_MAX,
-  ROUND_DESCRIPTION_MAX,
   ResourceInput,
   RoundOutcome,
   UploadedDocumentInput,
@@ -54,28 +50,9 @@ import { DocumentUpload, UploadedDocument } from "./document-upload";
 import { LogoUpload } from "./logo-upload";
 import { roundOutcomeMeta } from "./round-outcome";
 import { TemplatePicker } from "./template-picker";
-import {
-  VoiceInputButton,
-  VoiceTypingNote,
-  useVoiceTypingBusy,
-} from "./voice-input";
 
-/**
- * A round while editing. clientId never changes, unlike the round's position:
- * deleting round 2 while round 3 is being spoken into must not send the
- * spoken text into the wrong round. Stripped before submit.
- */
-type FormRound = ExperienceRoundInput & { clientId: string };
-
-let lastRoundKey = 0;
-function newRoundKey() {
-  lastRoundKey += 1;
-  return `round-${lastRoundKey}`;
-}
-
-function emptyRound(roundNumber: number): FormRound {
+function emptyRound(roundNumber: number): ExperienceRoundInput {
   return {
-    clientId: newRoundKey(),
     roundNumber,
     // A drive almost always opens with a screening test, so round 1 defaults to
     // Aptitude and everything after it to a technical interview.
@@ -97,29 +74,6 @@ type ResourceDraft = {
 
 function emptyResourceDraft(): ResourceDraft {
   return { title: "", document: null };
-}
-
-/** "120 / 6,000" under a text box; turns red past the limit. */
-function CharCount({ value, max }: { value: string; max: number }) {
-  const over = value.length > max;
-  return (
-    <p
-      className={`text-right text-xs tabular-nums ${
-        over ? "text-destructive font-medium" : "text-muted-foreground"
-      }`}
-    >
-      {value.length.toLocaleString()} / {max.toLocaleString()}
-    </p>
-  );
-}
-
-/** A box's label on the left, its Speak button on the right. */
-function LabelRow({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      {children}
-    </div>
-  );
 }
 
 /**
@@ -170,7 +124,7 @@ function templateJd(template: ExperienceTemplate): UploadedDocument | null {
   };
 }
 
-function templateRounds(template: ExperienceTemplate): FormRound[] {
+function templateRounds(template: ExperienceTemplate): ExperienceRoundInput[] {
   if (template.rounds.length === 0) return [emptyRound(1)];
   return template.rounds.map((round, index) => ({
     ...emptyRound(index + 1),
@@ -207,12 +161,9 @@ export function ExperienceForm({
     initialData?.preparationResources ?? "",
   );
   const [jd, setJd] = useState<UploadedDocument | null>(initialData?.jd ?? null);
-  const [rounds, setRounds] = useState<FormRound[]>(() =>
-    initialData?.rounds.length
-      ? initialData.rounds.map((round) => ({ ...round, clientId: newRoundKey() }))
-      : [emptyRound(1)],
+  const [rounds, setRounds] = useState<ExperienceRoundInput[]>(
+    initialData?.rounds.length ? initialData.rounds : [emptyRound(1)],
   );
-  const voiceBusy = useVoiceTypingBusy();
   const [resources, setResources] = useState<ResourceDraft[]>(
     initialData?.resources.map((resource) => ({
       title: resource.title,
@@ -256,20 +207,9 @@ export function ExperienceForm({
     if (roundsUntouched) setRounds([emptyRound(1)]);
   }
 
-  function updateRound(clientId: string, patch: Partial<ExperienceRoundInput>) {
+  function updateRound(index: number, patch: Partial<ExperienceRoundInput>) {
     setRounds((prev) =>
-      prev.map((r) => (r.clientId === clientId ? { ...r, ...patch } : r)),
-    );
-  }
-
-  /** Voice typing: adds spoken text after what's already in the round. */
-  function appendToRound(clientId: string, text: string) {
-    setRounds((prev) =>
-      prev.map((r) =>
-        r.clientId === clientId
-          ? { ...r, description: appendSpokenText(r.description, text) }
-          : r,
-      ),
+      prev.map((r, i) => (i === index ? { ...r, ...patch } : r)),
     );
   }
 
@@ -277,10 +217,10 @@ export function ExperienceForm({
     setRounds((prev) => [...prev, emptyRound(prev.length + 1)]);
   }
 
-  function removeRound(clientId: string) {
+  function removeRound(index: number) {
     setRounds((prev) =>
       prev
-        .filter((r) => r.clientId !== clientId)
+        .filter((_, i) => i !== index)
         .map((r, i) => ({ ...r, roundNumber: i + 1 })),
     );
   }
@@ -332,15 +272,7 @@ export function ExperienceForm({
       overview,
       preparationResources: preparationResources || undefined,
       jd: jd ? (jd satisfies UploadedDocumentInput) : undefined,
-      rounds: rounds.map(
-        (r): ExperienceRoundInput => ({
-          roundNumber: r.roundNumber,
-          roundType: r.roundType,
-          description: r.description,
-          difficulty: r.difficulty,
-          outcome: r.outcome,
-        }),
-      ),
+      rounds,
       resources: resourceInputs,
     };
 
@@ -407,7 +339,6 @@ export function ExperienceForm({
             ? "Update your writeup — changes will remove the verified badge until a coordinator reviews it again."
             : "Help juniors prepare — the whole process, from the aptitude test and OA to the final interview."}
         </CardDescription>
-        <VoiceTypingNote className="pt-1" />
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -508,18 +439,7 @@ export function ExperienceForm({
           </div>
 
           <div className="space-y-1.5">
-            <LabelRow>
-              <Label htmlFor="overview">Overall Experience</Label>
-              <VoiceInputButton
-                id="overview"
-                fieldLabel="Overall Experience"
-                context={[companyName, role]}
-                onText={(text) =>
-                  setOverview((prev) => appendSpokenText(prev, text))
-                }
-                disabled={isSubmitting}
-              />
-            </LabelRow>
+            <Label htmlFor="overview">Overall Experience</Label>
             <Textarea
               id="overview"
               placeholder="How the process went overall, general tips, timeline..."
@@ -528,27 +448,15 @@ export function ExperienceForm({
               onChange={(e) => setOverview(e.target.value)}
               disabled={isSubmitting}
             />
-            <CharCount value={overview} max={OVERVIEW_MAX} />
           </div>
 
           <div className="space-y-1.5">
-            <LabelRow>
-              <Label htmlFor="preparationResources">
-                Preparation Resources{" "}
-                <span className="text-muted-foreground font-normal">
-                  (optional)
-                </span>
-              </Label>
-              <VoiceInputButton
-                id="preparation"
-                fieldLabel="Preparation Resources"
-                context={[companyName, role]}
-                onText={(text) =>
-                  setPreparationResources((prev) => appendSpokenText(prev, text))
-                }
-                disabled={isSubmitting}
-              />
-            </LabelRow>
+            <Label htmlFor="preparationResources">
+              Preparation Resources{" "}
+              <span className="text-muted-foreground font-normal">
+                (optional)
+              </span>
+            </Label>
             <Textarea
               id="preparationResources"
               placeholder="Courses, books, websites, playlists you used..."
@@ -557,9 +465,6 @@ export function ExperienceForm({
               onChange={(e) => setPreparationResources(e.target.value)}
               disabled={isSubmitting}
             />
-            {preparationResources.length > PREPARATION_MAX * 0.8 && (
-              <CharCount value={preparationResources} max={PREPARATION_MAX} />
-            )}
           </div>
 
           <div className="space-y-3 rounded-lg border p-4">
@@ -605,12 +510,9 @@ export function ExperienceForm({
               </Button>
             </div>
 
-            {rounds.map((round) => {
+            {rounds.map((round, index) => {
               return (
-                <div
-                  key={round.clientId}
-                  className="space-y-3 rounded-lg border p-3"
-                >
+                <div key={index} className="space-y-3 rounded-lg border p-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">
                       Round {round.roundNumber}
@@ -620,7 +522,7 @@ export function ExperienceForm({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeRound(round.clientId)}
+                        onClick={() => removeRound(index)}
                         disabled={isSubmitting}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -634,7 +536,7 @@ export function ExperienceForm({
                       <Select
                         value={round.roundType}
                         onValueChange={(v) =>
-                          updateRound(round.clientId, {
+                          updateRound(index, {
                             roundType: v as ExperienceRoundInput["roundType"],
                           })
                         }
@@ -662,7 +564,7 @@ export function ExperienceForm({
                       <Select
                         value={round.difficulty ?? "unset"}
                         onValueChange={(v) =>
-                          updateRound(round.clientId, {
+                          updateRound(index, {
                             difficulty:
                               v === "unset"
                                 ? undefined
@@ -687,32 +589,15 @@ export function ExperienceForm({
                   </div>
 
                   <div className="space-y-1.5">
-                    <LabelRow>
-                      <Label>Questions asked / what happened</Label>
-                      <VoiceInputButton
-                        id={round.clientId}
-                        fieldLabel={`Round ${round.roundNumber}`}
-                        context={[
-                          companyName,
-                          role,
-                          roundTypeLabel[round.roundType],
-                        ]}
-                        onText={(text) => appendToRound(round.clientId, text)}
-                        disabled={isSubmitting}
-                      />
-                    </LabelRow>
+                    <Label>Questions asked / what happened</Label>
                     <Textarea
                       placeholder="Describe the questions asked and format of this round..."
                       rows={3}
                       value={round.description}
                       onChange={(e) =>
-                        updateRound(round.clientId, { description: e.target.value })
+                        updateRound(index, { description: e.target.value })
                       }
                       disabled={isSubmitting}
-                    />
-                    <CharCount
-                      value={round.description}
-                      max={ROUND_DESCRIPTION_MAX}
                     />
                   </div>
 
@@ -720,7 +605,7 @@ export function ExperienceForm({
                     <Label>Did you clear this round?</Label>
                     <RoundOutcomePicker
                       value={round.outcome}
-                      onChange={(outcome) => updateRound(round.clientId, { outcome })}
+                      onChange={(outcome) => updateRound(index, { outcome })}
                       disabled={isSubmitting}
                     />
                   </div>
@@ -795,14 +680,8 @@ export function ExperienceForm({
             )}
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isSubmitting || voiceBusy}
-          >
-            {voiceBusy && !isSubmitting
-              ? "Finishing voice typing…"
-              : isSubmitting
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting
               ? isEditing
                 ? "Saving..."
                 : "Sharing..."
