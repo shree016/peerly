@@ -4,10 +4,11 @@ import { useState } from "react";
 
 import { useRouter } from "@bprogress/next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { LogOut, Moon, PenLine, Sun } from "lucide-react";
+import { KeyRound, LogOut, Moon, PenLine, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
+import { PasswordDialog } from "@/features/profile/components/password-dialog";
 import { ProfileDialog } from "@/features/profile/components/profile-dialog";
 
 import { logout } from "@/actions/auth";
@@ -17,11 +18,19 @@ import type { User } from "@/types";
 const rowClass =
   "bg-card flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left text-sm font-semibold shadow-xs transition active:scale-[0.99] hover:bg-muted";
 
-export function ProfileActions({ user }: { user: User }) {
+export function ProfileActions({
+  user,
+  hasPassword,
+}: {
+  user: User;
+  /** False for accounts that only log in with Google. */
+  hasPassword: boolean;
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { resolvedTheme, setTheme } = useTheme();
   const [editOpen, setEditOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   const logoutMutation = useMutation({
     mutationFn: logout,
@@ -35,12 +44,30 @@ export function ProfileActions({ user }: { user: User }) {
   return (
     <>
       <ProfileDialog open={editOpen} onOpenChange={setEditOpen} user={user} />
+      <PasswordDialog
+        open={passwordOpen}
+        onOpenChange={setPasswordOpen}
+        mode={hasPassword ? "change" : "set"}
+      />
       <div className="space-y-2">
         <button type="button" className={rowClass} onClick={() => setEditOpen(true)}>
           <span className="bg-sky-soft flex size-9 items-center justify-center rounded-xl">
             <PenLine className="size-4" />
           </span>
           Edit profile
+        </button>
+        <button type="button" className={rowClass} onClick={() => setPasswordOpen(true)}>
+          <span className="bg-candy-soft flex size-9 items-center justify-center rounded-xl">
+            <KeyRound className="size-4" />
+          </span>
+          <span className="flex-1">
+            {hasPassword ? "Change password" : "Set a password"}
+            {!hasPassword && (
+              <span className="text-muted-foreground block text-xs font-normal">
+                Log in with your email too, not only Google
+              </span>
+            )}
+          </span>
         </button>
         <button
           type="button"

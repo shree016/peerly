@@ -51,6 +51,8 @@ const Login = () => {
   );
   const notice = searchParams.has("verified")
     ? "Link confirmed. Log in to continue."
+    : searchParams.get("reset") === "done"
+      ? "Password saved. Log in with your new password."
     : searchParams.get("verify") === "sent"
       ? "Check your inbox and spam folder for a verification link, then log in. No email? Log in below: we'll send a new link if your account still needs one."
       : null;
@@ -167,7 +169,15 @@ const Login = () => {
               <form.Field name="password">
                 {(field) => (
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <div className="flex items-center justify-between gap-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Link
+                        href="/auth/forgot-password"
+                        className="text-primary text-xs font-medium hover:underline"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
                     <InputGroup>
                       <InputGroupAddon>
                         <InputGroupText>

@@ -5,7 +5,11 @@ import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 
-import { buildVerificationEmailHtml, sendEmail } from "@/lib/email";
+import {
+  buildPasswordResetEmailHtml,
+  buildVerificationEmailHtml,
+  sendEmail,
+} from "@/lib/email";
 import { allowEmailSend } from "@/lib/email-send-limit";
 
 import db from "@/db";
@@ -30,6 +34,41 @@ export const auth = betterAuth({
     // No session until the inbox is proven. This also makes sign-up answer the
     // same way for new and taken emails.
     requireEmailVerification: true,
+    // Forgot password. The link works for an hour and only once.
+    resetPasswordTokenExpiresIn: 60 * 60,
+    // Whoever knew the old password is logged out everywhere.
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      // Skipped quietly, so the page answers the same way for every address.
+      // A link from the last hour still works.
+      if (!(await allowEmailSend("reset-password", user.email))) {
+        console.warn("Password reset email skipped: hourly limit for this address.");
+        return;
+      }
+      await sendEmail({
+        to: user.email,
+        subject: "Reset your Peeerly password",
+        text: `Hi${user.name ? ` ${user.name}` : ""},
+
+Someone asked to set a new password for your Peeerly account. If that was you, choose your new password here (the link works for 1 hour):
+${url}
+
+If you didn't ask for this, ignore this email. Your password stays the same.`,
+        html: buildPasswordResetEmailHtml({ name: user.name, url }),
+      });
+    },
+    onPasswordReset: async ({ user }) => {
+      // The reset link was opened from this inbox, which proves the address
+      // just as a verification link does. Without this, a person whose email
+      // someone else signed up with first would reset the password and still
+      // be locked out as "unverified".
+      if (!user.emailVerified) {
+        await db
+          .update(userTable)
+          .set({ emailVerified: true })
+          .where(eq(userTable.id, user.id));
+      }
+    },
   },
   emailVerification: {
     sendOnSignUp: true,
@@ -74,7 +113,11 @@ export const auth = betterAuth({
       if (ctx.path.startsWith("/admin/")) {
         throw new APIError("FORBIDDEN", { message: "Not available." });
       }
-      if (ctx.path === "/sign-up/email" || ctx.path === "/sign-in/email") {
+      if (
+        ctx.path === "/sign-up/email" ||
+        ctx.path === "/sign-in/email" ||
+        ctx.path === "/request-password-reset"
+      ) {
         rejectDisallowedEmail(ctx.body?.email as string | undefined);
       }
     }),

@@ -64,7 +64,9 @@ export async function signIn({
       const message =
         code === "EMAIL_NOT_VERIFIED"
           ? "Verify your email before logging in. We've sent a new link, so check your inbox and spam folder."
-          : error.body.message;
+          : code === "INVALID_EMAIL_OR_PASSWORD"
+            ? "Wrong email or password. If you signed up with Google, use the Google button, or tap Forgot password to set one."
+            : error.body.message;
       throw new AppError(code, message, error.statusCode);
     }
   });

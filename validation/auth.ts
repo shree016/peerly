@@ -31,6 +31,34 @@ export const signUpSchema = z.object({
   password: password,
 });
 
+export const forgotPasswordSchema = z.object({ email: allowedEmail });
+
+/** Choosing a password: reset link, or a Google account adding one. */
+export const newPasswordSchema = z
+  .object({
+    newPassword: password,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Enter your current password"),
+    newPassword: password,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  })
+  .refine((data) => data.newPassword !== data.currentPassword, {
+    message: "Choose a password different from your current one",
+    path: ["newPassword"],
+  });
+
 export const signUpWithConfirmSchema = z
   .object({
     name: z

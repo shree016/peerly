@@ -10,6 +10,7 @@ import { RankRow } from "@/components/common/podium";
 import { CompanyAvatar } from "@/features/experiences/components/company-avatar";
 import { getAllExperiences } from "@/features/experiences/lib/actions";
 import { ProfileActions } from "@/features/profile/components/profile-actions";
+import { getHasPassword } from "@/actions/password";
 import { getUser } from "@/actions/user";
 
 import { ROLE_LABELS } from "@/lib/permissions/roles";
@@ -24,9 +25,11 @@ export default async function ProfilePage() {
   const user = await getUser();
   if (!user) redirect("/auth/login?callbackUrl=/profile");
 
-  const mine = (await getAllExperiences().catch(() => [])).filter(
-    (e) => e.authorId === user.id,
-  );
+  const [all, hasPassword] = await Promise.all([
+    getAllExperiences().catch(() => []),
+    getHasPassword(),
+  ]);
+  const mine = all.filter((e) => e.authorId === user.id);
 
   const initials =
     user.name
@@ -62,7 +65,7 @@ export default async function ProfilePage() {
 
       <section className="mt-6">
         <h2 className="mb-3 text-lg font-bold">Settings</h2>
-        <ProfileActions user={user} />
+        <ProfileActions user={user} hasPassword={hasPassword} />
       </section>
 
       <section className="mt-8">
